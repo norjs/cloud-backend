@@ -1,0 +1,10 @@
+/ca.pem
+/ca-key.pem
+/ca-crt.pem
+/ca.cnf
+/node_modules/
+/server-key.pem
+/ca-crt.srl
+/server-crt.pem
+/server-csr.pem
+/server.cnf
