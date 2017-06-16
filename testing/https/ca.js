@@ -77,18 +77,27 @@ function createCA (config) {
 }
 
 /** */
-function createKey () {
-	return _getTempFile("server-key.pem").then(keyFile => {
+function createKey (keyFileName) {
+	keyFileName = keyFileName || "server-key.pem";
+	return _getTempFile(keyFileName).then(keyFile => {
 		return _exec(openssl, ["genrsa", "-out", keyFile, "4096"]).then(() => _readFile(keyFile));
 	});
 }
 
 /** */
-function createCSR (config, key) {
+function createCSR (config, key, fileNames) {
+
+	if (is.string(fileNames)) {
+		fileNames = {name: fileNames};
+	}
+
+	fileNames = fileNames || {};
+	fileNames.name = fileNames.name || "server";
+
 	return _Q.all([
-		_getTempFile("server.cnf", config),
-		_getTempFile("server-key.pem", key),
-		_getTempFile("server-csr.pem")
+		_getTempFile(fileNames.config || (fileNames.name + ".cnf"), config),
+		_getTempFile(fileNames.key || (fileNames.name + "-key.pem"), key),
+		_getTempFile(fileNames.csr || (fileNames.name + "-csr.pem"))
 	]).spread( (configFile, keyOutFile, crtOutFile) => {
 		return _exec(openssl, [
 			"req",
@@ -101,13 +110,23 @@ function createCSR (config, key) {
 
 }
 
-function sign (serverConfig, serverCSR, ca) {
+// openssl req -new -config client1.cnf -key client1-key.pem -out client1-csr.pem
+
+function sign (serverConfig, serverCSR, ca, fileNames) {
+
+	if (is.string(fileNames)) {
+		fileNames = {name: fileNames};
+	}
+
+	fileNames = fileNames || {};
+	fileNames.name = fileNames.name || "server";
+
 	return _Q.all([
-		_getTempFile("server.cnf", serverConfig),
-		_getTempFile("server-csr.pem", serverCSR),
-		_getTempFile("ca-crt.pem", ca.crt),
-		_getTempFile("ca-key.pem", ca.key),
-		_getTempFile("server-crt.pem"),
+		_getTempFile(fileNames.config || (fileNames.name + ".cnf"), serverConfig),
+		_getTempFile(fileNames.csr || (fileNames.name + "-csr.pem"), serverCSR),
+		_getTempFile(fileNames.caCrt || "ca-crt.pem", ca.crt),
+		_getTempFile(fileNames.caKey || "ca-key.pem", ca.key),
+		_getTempFile(fileNames.crt || (fileNames.name + "-crt.pem")),
 	]).spread( (serverConfigFile, serverCSRFile, caCertFile, caKeyFile, serverCertFile) => {
 		return _exec(openssl, [
 			"x509",
@@ -123,6 +142,10 @@ function sign (serverConfig, serverCSR, ca) {
 		]).then(() => _readFile(serverCertFile));
 	});
 }
+
+// openssl x509 -req -extfile client1.cnf -days 999 -passin "pass:password" -in client1-csr.pem -CA ca-crt.pem
+// -CAkey ca-key.pem -CAcreateserial -out client1-crt.pem
+
 
 // Exports
 module.exports = {

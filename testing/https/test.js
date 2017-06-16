@@ -7,6 +7,7 @@ const debug = require("nor-debug");
 
 const caConfigFile = "./etc/ca.cnf";
 const serverConfigFile = "./etc/server.cnf";
+const clientConfigFile = "./etc/client.cnf";
 
 const encoding = "utf8";
 
@@ -17,8 +18,9 @@ function _readFile (name) {
 
 _Q.all([
 	_readFile(caConfigFile),
-	_readFile(serverConfigFile)
-]).spread( (caConfig, serverConfig) => {
+	_readFile(serverConfigFile),
+	_readFile(clientConfigFile)
+]).spread( (caConfig, serverConfig, clientConfig) => {
 
 	return openssl.createCA(caConfig).then(ca => {
 		debug.log("CA => ", ca);
@@ -31,8 +33,21 @@ _Q.all([
 
 				return openssl.sign(serverConfig, serverCSR, ca).then( serverCert => {
 					debug.log("serverCert => ", serverCert);
-				});
 
+					return openssl.createKey("client1-key.pem").then(clientKey => {
+						debug.log("client key => ", clientKey);
+
+						return openssl.createCSR(clientConfig, clientKey, "client1").then( clientCSR => {
+							debug.log("clientCSR => ", clientCSR);
+
+							return openssl.sign(clientConfig, clientCSR, ca, "client1").then( clientCert => {
+								debug.log("clientCert => ", clientCert);
+
+
+							});
+						});
+					});
+				});
 			});
 		});
 	});

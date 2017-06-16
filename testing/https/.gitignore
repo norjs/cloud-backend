@@ -3,8 +3,12 @@
 /ca-crt.pem
 /ca.cnf
 /node_modules/
-/server-key.pem
 /ca-crt.srl
+/server-key.pem
 /server-crt.pem
 /server-csr.pem
 /server.cnf
+/client1-key.pem
+/client1-crt.pem
+/client1-csr.pem
+/client1.cnf
