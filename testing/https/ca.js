@@ -13,6 +13,11 @@ function _readFile (name) {
 	return fs.readFile(name, {encoding});
 }
 
+/** Read a text file */
+function _readJSON (name) {
+	return _readFile(name).then(data => JSON.parse(data));
+}
+
 /** Write a text file */
 function _writeFile (name, content) {
 	return fs.writeFile(name, content, {encoding});
@@ -39,10 +44,13 @@ function _getTempFile (name, content) {
 	});
 }
 
-/** Returns an object with key and crt as strings */
+/** Returns an object with key and crt as strings
+ * @param config {string} The OpenSSL configuration for generating CA
+ * @returns {Promise} of object with `key` and `crt` string properties
+ */
 function createCA (config) {
 	return _Q.all([
-		_getTempFile("ca.cnf", config),
+		encodeConfig(config).then( encodedConfig => _getTempFile("ca.cnf", encodedConfig) ),
 		_getTempFile("ca-key.pem"),
 		_getTempFile("ca-crt.pem")
 	]).spread( (configFile, keyOutFile, crtOutFile) => {
@@ -76,7 +84,10 @@ function createCA (config) {
 	});
 }
 
-/** */
+/** Generate a private key
+ * @param keyFileName {string} Default name for temporary key file
+ * @returns {Promise} The private key as string
+ */
 function createKey (keyFileName) {
 	keyFileName = keyFileName || "server-key.pem";
 	return _getTempFile(keyFileName).then(keyFile => {
@@ -84,7 +95,12 @@ function createKey (keyFileName) {
 	});
 }
 
-/** */
+/** Generate a certificate signing request
+ * @param config {string} OpenSSL configuration for signing
+ * @param key {string} Private key for certificate
+ * @param fileNames {string|object} Default name as a string for generated temporary files or an object to specify names for each of them.
+ * @param {Promise} Generated CSR as string
+ */
 function createCSR (config, key, fileNames) {
 
 	if (is.string(fileNames)) {
@@ -95,7 +111,7 @@ function createCSR (config, key, fileNames) {
 	fileNames.name = fileNames.name || "server";
 
 	return _Q.all([
-		_getTempFile(fileNames.config || (fileNames.name + ".cnf"), config),
+		encodeConfig(config).then( encodedConfig => _getTempFile(fileNames.config || (fileNames.name + ".cnf"), encodedConfig) ),
 		_getTempFile(fileNames.key || (fileNames.name + "-key.pem"), key),
 		_getTempFile(fileNames.csr || (fileNames.name + "-csr.pem"))
 	]).spread( (configFile, keyOutFile, crtOutFile) => {
@@ -110,9 +126,16 @@ function createCSR (config, key, fileNames) {
 
 }
 
-// openssl req -new -config client1.cnf -key client1-key.pem -out client1-csr.pem
-
-function sign (serverConfig, serverCSR, ca, fileNames) {
+/** Sign a certificate
+ * @param config {string} The openssl configuration for signing
+ * @param csr {string} The openssl signing request
+ * @param ca {object} CA object
+ * @param ca.crt {string} CA certificate
+ * @param ca.key {string} CA private key
+ * @param fileNames {string|object} Default name as a string for generated temporary files or an object to specify names for each of them.
+ * @returns {Promise} The signed certificate as string
+ */
+function sign (config, csr, ca, fileNames) {
 
 	if (is.string(fileNames)) {
 		fileNames = {name: fileNames};
@@ -122,8 +145,8 @@ function sign (serverConfig, serverCSR, ca, fileNames) {
 	fileNames.name = fileNames.name || "server";
 
 	return _Q.all([
-		_getTempFile(fileNames.config || (fileNames.name + ".cnf"), serverConfig),
-		_getTempFile(fileNames.csr || (fileNames.name + "-csr.pem"), serverCSR),
+		encodeConfig(config).then( encodedConfig => _getTempFile(fileNames.config || (fileNames.name + ".cnf"), encodedConfig) ),
+		_getTempFile(fileNames.csr || (fileNames.name + "-csr.pem"), csr),
 		_getTempFile(fileNames.caCrt || "ca-crt.pem", ca.crt),
 		_getTempFile(fileNames.caKey || "ca-key.pem", ca.key),
 		_getTempFile(fileNames.crt || (fileNames.name + "-crt.pem")),
@@ -143,14 +166,91 @@ function sign (serverConfig, serverCSR, ca, fileNames) {
 	});
 }
 
-// openssl x509 -req -extfile client1.cnf -days 999 -passin "pass:password" -in client1-csr.pem -CA ca-crt.pem
-// -CAkey ca-key.pem -CAcreateserial -out client1-crt.pem
+/** Returns OpenSSL configuration for a CA */
+function createCAConfig () {
+	return _Q.when({
+		"ca": {
+			"default_ca": "CA_default"
+		},
+		"CA_default": {
+			"serial": "ca-serial",
+			"crl": "ca-crl.pem",
+			"database": "ca-database.txt",
+			"name_opt": "CA_default",
+			"cert_opt": "CA_default",
+			"default_crl_days": 9999,
+			"default_md": "md5"
+		},
+		"req": {
+			"default_bits": 4096,
+			"days": 9999,
+			"distinguished_name": "req_distinguished_name",
+			"attributes": "req_attributes",
+			"prompt": "no",
+			"output_password": "password"
+		},
+		"req_distinguished_name": {
+			"C": "FI",
+			"ST": "FI",
+			"L": "Oulu",
+			"O": "Sendanor",
+			"OU": "Cloud Backend",
+			"CN": "ca",
+			"emailAddress": "info@sendanor.com"
+		},
+		"req_attributes": {
+			"challengePassword": "test"
+		}
+	});
+}
 
+/** Returns OpenSSL configuration for a certificate with a `commonName` */
+function createCertConfig (commonName) {
+	return _Q.when({
+		"req": {
+			"default_bits": 4096,
+			"days": 9999,
+			"distinguished_name": "req_distinguished_name",
+			"attributes": "req_attributes",
+			"prompt": "no",
+			"x509_extensions": "v3_ca"
+		},
+		"req_distinguished_name": {
+			"C": "FI",
+			"ST": "FI",
+			"L": "Oulu",
+			"O": "Sendanor",
+			"OU": "Cloud Backend",
+			"CN": commonName,
+			"emailAddress": "info@sendanor.com"
+		},
+		"req_attributes": {
+			"challengePassword": "password"
+		},
+		"v3_ca": {
+			"authorityInfoAccess": "@issuer_info"
+		},
+		"issuer_info": {
+			"OCSP;URI.0": "http://ocsp.sendanor.com/",
+			"caIssuers;URI.0": "http://sendanor.com/ca.cert"
+		}
+	});
+}
+
+/** Convert OpenSSL configuration object into OpenSSL configuration string */
+function encodeConfig (config) {
+	return _Q.when(Object.keys(config).forEach(key => {
+		return "[ " + key + " ]\n" + Object.keys(config[key]).forEach(key2 => key2 + ' = ' + config[key][key2]).join("\n")q + "\n";
+	}).join("\n"));
+}
 
 // Exports
 module.exports = {
 	createCA,
 	createKey,
 	createCSR,
-	sign
+	sign,
+	createCertConfig,
+	createCAConfig,
+	encodeConfig
 };

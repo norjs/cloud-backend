@@ -5,9 +5,7 @@ const fs = require("nor-fs");
 const openssl = require("./ca.js");
 const debug = require("nor-debug");
 
-const caConfigFile = "./etc/ca.cnf";
-const serverConfigFile = "./etc/server.cnf";
-const clientConfigFile = "./etc/client.cnf";
+const workingDir = "./tmp";
 
 const encoding = "utf8";
 
@@ -16,40 +14,29 @@ function _readFile (name) {
 	return fs.readFile(name, {encoding});
 }
 
+process.chdir(workingDir);
+
+const createCA = () => openssl.createCAConfig().then(caConfig => openssl.createCA(caConfig));
+const createKey = name => openssl.createKey(name + "-key.pem");
+const createCSR = (commonName) => _Q.all([openssl.createCertConfig(commonName), createKey(commonName)]).spread( (config, key) => openssl.createCSR(config, key, commonName) );
+const signCert = (ca, csr, commonName) => openssl.createCertConfig(commonName).then( config => openssl.sign(config, csr, ca, commonName) );
+
 _Q.all([
-	_readFile(caConfigFile),
-	_readFile(serverConfigFile),
-	_readFile(clientConfigFile)
-]).spread( (caConfig, serverConfig, clientConfig) => {
+	createCA(),
+	createCSR("localhost"),
+	createCSR("client1")
+]).spread( (caConfig, serverCSR, clientCSR) => {
 
-	return openssl.createCA(caConfig).then(ca => {
-		debug.log("CA => ", ca);
+	debug.log("CA => ", ca);
+	debug.log("serverCSR => ", serverCSR);
+	debug.log("clientCSR => ", clientCSR);
 
-		return openssl.createKey().then(serverKey => {
-			debug.log("server key => ", serverKey);
-
-			return openssl.createCSR(serverConfig, serverKey).then( serverCSR => {
-				debug.log("serverCSR => ", serverCSR);
-
-				return openssl.sign(serverConfig, serverCSR, ca).then( serverCert => {
-					debug.log("serverCert => ", serverCert);
-
-					return openssl.createKey("client1-key.pem").then(clientKey => {
-						debug.log("client key => ", clientKey);
-
-						return openssl.createCSR(clientConfig, clientKey, "client1").then( clientCSR => {
-							debug.log("clientCSR => ", clientCSR);
-
-							return openssl.sign(clientConfig, clientCSR, ca, "client1").then( clientCert => {
-								debug.log("clientCert => ", clientCert);
-
-
-							});
-						});
-					});
-				});
-			});
-		});
+	return _Q.all([
+		signCert(ca, serverCSR, "localhost"),
+		signCert(ca, clientCSR, "client1")
+	]).spread( (serverCert, clientCert) => {
+		debug.log("serverCert => ", serverCert);
+		debug.log("clientCert => ", clientCert);
 	});
 
 }).fail(err => {

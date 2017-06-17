@@ -8,7 +8,9 @@ const options = {
 	port: 4433,
 	path: '/',
 	method: 'GET',
-	ca: fs.readFileSync('ca-crt.pem')
+	key: fs.readFileSync('./tmp/client1-key.pem'),
+	cert: fs.readFileSync('./tmp/client1-crt.pem'),
+	ca: fs.readFileSync('./tmp/ca-crt.pem')
 };
 
 const req = https.request(options, res =>{
