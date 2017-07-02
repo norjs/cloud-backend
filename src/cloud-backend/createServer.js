@@ -6,7 +6,11 @@ import http from 'http';
 import debug from 'nor-debug';
 
 const createServerByProtocol = {
+
+	/* Create a HTTP server */
 	http: config => http.createServer(config.requestHandler),
+
+	/* Create a HTTPS server (with the client certificate support on by default) */
 	https: config => {
 		debug.assert(config).is('object');
 		debug.assert(config.ca).is('string');
@@ -17,15 +21,17 @@ const createServerByProtocol = {
 			key: config.key,
 			cert: config.cert,
 			ca: config.ca,
-			requestCert: true,
-			rejectUnauthorized: true
+			requestCert: config.hasOwnProperty('requestCert') ? !!config.requestCert : true,
+			rejectUnauthorized: config.hasOwnProperty('rejectUnauthorized') ? !!config.rejectUnauthorized : true
 		};
 		debug.log('https: options = ', options);
 		return https.createServer(options, config.requestHandler );
 	}
 };
 
-/** Create a HTTPS server with client certificate support */
+const _errorLogger = (err, prefix='Error:') => debug.error(prefix, err);
+
+/**  */
 const createServer = config => {
 
 	debug.assert(config).is('object');
@@ -47,6 +53,7 @@ const createServer = config => {
 	let listeningHandler;
 
 	const errorHandler = err => {
+		debug.error('Server Error: ', err);
 		server.removeListener('listening', listeningHandler);
 		server.close(() => defer.reject(err));
 	};
@@ -58,6 +65,8 @@ const createServer = config => {
 
 	server.once('error', errorHandler);
 	server.once('listening', listeningHandler);
+
+	server.on('error', err => _errorLogger(err, 'Server Error:') );
 
 	return defer.promise;
 };

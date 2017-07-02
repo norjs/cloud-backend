@@ -4,6 +4,7 @@ export default class MicroService {
 
 	/** The constructor is called when the backend starts */
 	constructor () {
+		this.microServiceVersion = '1.0';
 	}
 
 	/** Called when the micro service starts */
@@ -24,6 +25,14 @@ export default class MicroService {
 
 	/** Destroy is called when this microservice is closing down */
 	$onDestroy () {
+	}
+
+	/** A function inside a parent class */
+	parentMethodTest (input) {
+		return {
+			date: new Date(),
+			payload: input
+		};
 	}
 
 }

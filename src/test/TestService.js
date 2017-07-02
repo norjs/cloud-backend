@@ -10,7 +10,7 @@ export default class TestService extends MicroService {
 
 	/** Private method */
 	_secretOperation () {
-
+		return {'secret': 'message'};
 	}
 
 	/** Returns current date */
@@ -20,7 +20,7 @@ export default class TestService extends MicroService {
 
 	/** Returns an object */
 	getObject () {
- 		return {"foo": "bar"};
+ 		return {"foo": "bar", date: new Date()};
 	}
 
 	/** Returns a string */
@@ -28,9 +28,23 @@ export default class TestService extends MicroService {
  		return "hello world";
 	}
 
+	/** Returns a number */
+	getNumber () {
+ 		return 123.456;
+	}
+
 	/** Returns an array */
-	getArray () {
+	_getArray () {
 		return ["foo", "bar", "hello", "world"];
+	}
+
+	/** Returns an array */
+	array () {
+		return this._getArray();
+	}
+
+	get array () {
+		return this._getArray();
 	}
 
 }

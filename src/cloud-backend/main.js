@@ -4,12 +4,10 @@
  */
 
 import minimist from 'minimist';
-import serviceRequestHandler from './serviceRequestHandler';
-import httpsServer from './httpsServer.js';
 import _ from 'lodash';
 import debug from 'nor-debug';
 import Q from 'q';
-import startHTTPSServiceByName from './startHTTPSServiceByName.js';
+import startServiceByName from './startServiceByName.js';
 import fs from 'fs';
 
 const argv = minimist(process.argv.slice(2));
@@ -17,10 +15,11 @@ const argv = minimist(process.argv.slice(2));
 const usage = [
 	'USAGE: ', process.argv[0], ' [OPT(s)] Service [...Service_N]',
 	'  where OPTS is:',
-	'    --port=PORT',
-	'    --ca-file=path/to/ca.crt',
-	'    --cert-file=path/to/server.crt',
-	'    --key-file=path/to/server.key',
+	'    --protocol=PROTOCOL             -- Server protocol; HTTPS (default) or HTTP',
+	'    --port=PORT                     -- Server port, by default 3000',
+	'    --ca-file=path/to/ca.crt        -- Server PKI CA certificate file',
+	'    --cert-file=path/to/server.crt  -- Server PKI certificate file',
+	'    --key-file=path/to/server.key   -- Server PKI private key file',
 	'  and Service is a path to JavaScript class file.'
 ].join('\n');
 
@@ -29,6 +28,7 @@ if (argv._.length === 0) {
 } else {
 
 	let config = {};
+
 	_.forEach(Object.keys(argv), key => {
 		if (key === '_') return;
 
@@ -41,10 +41,12 @@ if (argv._.length === 0) {
 		config[camelCaseKey] = argv[key];
 	});
 
+	const serviceNames = argv._;
+
 	if ( (!config.ca) || (!config.cert) || (!config.key) ) {
 		console.log(usage);
 	} else {
-		Q.all(_.map(argv._, serviceName => startHTTPSServiceByName(serviceName, config))).then(() => {
+		Q.all(_.map(serviceNames, serviceName => startServiceByName(serviceName, config))).then(() => {
 			console.log('All services started.');
 		}).fail(err => {
 			debug.error('Failed to start services: ', err);
