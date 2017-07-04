@@ -47,4 +47,9 @@ export default class TestService extends MicroService {
 		return this._getArray();
 	}
 
+	/** */
+	echo (value) {
+		return value;
+	}
+
 }

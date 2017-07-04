@@ -1,6 +1,8 @@
 
+import Service from '../cloud-backend/Service.js';
+
 /** Base class for MicroServices */
-export default class MicroService {
+export default class MicroService extends Service {
 
 	/** The constructor is called when the backend starts */
 	constructor () {
