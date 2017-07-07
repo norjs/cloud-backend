@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "babel src --out-dir dist --presets=es2015",
-    "watch-build": "babel --watch src --out-dir dist --presets=es2015"
+    "compile": "babel src --out-dir dist --presets=es2015",
+    "watch-compile": "babel --watch src --out-dir dist --presets=es2015"
   },
   "repository": {
     "type": "git",
