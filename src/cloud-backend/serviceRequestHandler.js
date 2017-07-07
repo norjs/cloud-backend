@@ -5,7 +5,7 @@ import Q from 'q';
 import debug from 'nor-debug';
 import ref from 'nor-ref';
 import { HTTPError } from 'nor-errors';
-import { createBodyIDs } from '../cloud-common/id.js'
+import { createBodyIDs } from '@sendanor/cloud-common/id.js'
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = !isProduction;
