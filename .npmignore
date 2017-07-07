@@ -1,4 +1,6 @@
+/.git
 /.idea
 /node_modules
 /src/
+/testing/
 *.log

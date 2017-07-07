@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "ssh://git@bitbucket.sendanor.fi:7999/nor/cloud-backend.git"
+    "url": "https://github.com/sendanor/cloud-backend.git"
   },
   "keywords": [
     "cloud",
@@ -18,17 +18,16 @@
   ],
   "author": "Jaakko-Heikki Heusala <jheusala@iki.fi>",
   "license": "MIT",
-  "private": true,
   "devDependencies": {
     "babel-cli": "^6.24.1",
-    "babel-preset-es2015": "^6.24.1"
+    "babel-preset-es2015": "^6.24.1",
+    "nodemon": "^1.11.0"
   },
   "dependencies": {
     "@sendanor/cloud-common": "^1.0.0",
     "globals": "^10.0.0",
     "lodash": "^4.17.4",
     "minimist": "^1.2.0",
-    "nodemon": "^1.11.0",
     "nor-debug": "^1.0.0",
     "nor-errors": "^1.0.0",
     "nor-ref": "^1.0.0",
