@@ -49,7 +49,7 @@ if (argv._.length === 0) {
 	});
 
 	// Enable --listen automatically if --port or --protocol exists
-	if ( (config.protocol || config.port) && (!config.hasOwnProperty('listen')) ) {
+	if ( (config.protocol || config.port) && (!_.has(config, 'listen')) ) {
 		config.listen = '';
 	}
 
@@ -103,7 +103,7 @@ if (argv._.length === 0) {
 
 		}).then(() => {
 
-			if (!config.hasOwnProperty('listen')) {
+			if (!_.has(config, 'listen')) {
 				return;
 			}
 

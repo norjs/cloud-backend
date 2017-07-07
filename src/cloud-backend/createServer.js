@@ -21,8 +21,8 @@ const createServerByProtocol = {
 			key: config.key,
 			cert: config.cert,
 			ca: config.ca,
-			requestCert: config.hasOwnProperty('requestCert') ? !!config.requestCert : true,
-			rejectUnauthorized: config.hasOwnProperty('rejectUnauthorized') ? !!config.rejectUnauthorized : true
+			requestCert: _.has(config, 'requestCert') ? !!config.requestCert : true,
+			rejectUnauthorized: _.has(config, 'rejectUnauthorized') ? !!config.rejectUnauthorized : true
 		};
 		//debug.log('https: options = ', options);
 		return https.createServer(options, requestHandler);

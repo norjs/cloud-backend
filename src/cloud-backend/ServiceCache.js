@@ -20,7 +20,7 @@ export default class ServiceCache extends Service {
 		}
 
 		if (is.uuid(service_)) {
-			return this._services.hasOwnProperty(service_);
+			return _.has(this._services, service_);
 		}
 
 		if (is.string(service_)) {
@@ -119,7 +119,7 @@ export default class ServiceCache extends Service {
 	/** Returns service instance by name or Function */
 	_getInstances (service_) {
 		const uuids = this._getUUIDs(service_);
-		return _.map(_.filter(uuids, uuid => this._services.hasOwnProperty(uuid) && this._services[uuid].instance), uuid => this._services[uuid].instance);
+		return _.map(_.filter(uuids, uuid => _.has(this._services, uuid) && this._services[uuid].instance), uuid => this._services[uuid].instance);
 	}
 
 	/** Returns service instance by name or Function */

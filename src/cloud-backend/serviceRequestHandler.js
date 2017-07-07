@@ -5,6 +5,7 @@ import Q from 'q';
 import debug from 'nor-debug';
 import ref from 'nor-ref';
 import { HTTPError } from 'nor-errors';
+import { createBodyIDs } from '../cloud-common/id.js'
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = !isProduction;
@@ -21,7 +22,7 @@ const reservedPropertyNames = [
 ];
 
 /** */
-const _isReservedPropertyName = name => reservedPropertyNames.indexOf(name) >= 0;
+const _isReservedPropertyName = name => _.indexOf(reservedPropertyNames, name) >= 0;
 
 /** Send a reply in JSON format */
 const jsonReply = content => {
@@ -82,10 +83,50 @@ const _getConstructors = obj => {
 };
 
 /** */
-const _prepareObjectResponse = (context, content) => {
+const _prepareObjectPrototypeResponse = (context, content) => {
 	const properties = _getAllKeys(content).filter(_notPrivate);
-	const methods = properties.filter(key => is.func(content[key]));
-	const members = properties.filter(key => !is.func(content[key]));
+	const methods = _.filter(properties, key => is.func(content[key]));
+
+	//debug.log("content = ", content);
+	//debug.log("methods = ", methods);
+	//debug.log("members = ", members);
+	//debug.log("properties = ", properties);
+
+	const $name = _.get(content, 'constructor.name');
+
+	let body = {
+		$id: null,
+		$hash: null,
+		$ref: context.$ref(),
+		$name,
+		$type: [$name].concat(_getConstructors(content))
+	};
+
+	_.forEach(methods, method => {
+		body[method] = {
+			$type: 'Function',
+			$method: 'post',
+			$ref: context.$ref(method)
+		};
+	});
+
+	let id, hash;
+	[id, hash] = createBodyIDs(body);
+
+	body.$id = id;
+	body.$hash = hash;
+
+	return body;
+};
+
+/** */
+const _prepareObjectResponse = (context, content) => {
+
+	const properties = Object.getOwnPropertyNames(content).filter(_notPrivate);
+	const methods = _.filter(properties, key => is.func(content[key]));
+
+	const allProperties = _getAllKeys(content).filter(_notPrivate);
+	const members = _.filter(allProperties, key => !is.func(content[key]));
 
 	//debug.log("content = ", content);
 	//debug.log("methods = ", methods);
@@ -93,22 +134,35 @@ const _prepareObjectResponse = (context, content) => {
 	//debug.log("properties = ", properties);
 
 	let body = {
+		$id: null,
+		$hash: null,
 		$ref: context.$ref(),
-		//$type: _.get(content, 'constructor.name'),
 		$type: _getConstructors(content)
 	};
 
-	members.forEach( member => {
-		body[member] = content[member];
+	_.forEach(members, member => {
+		body[member] = _.cloneDeep(content[member]);
 	});
 
-	methods.forEach( method => {
+	_.forEach(methods, method => {
 		body[method] = {
 			$type: 'Function',
 			$method: 'post',
 			$ref: context.$ref(method)
 		};
 	});
+
+	let id, hash;
+	[id, hash] = createBodyIDs(body);
+
+	body.$id = id;
+	body.$hash = hash;
+
+	const proto = Object.getPrototypeOf(content);
+	const name = proto && _.get(proto, 'constructor.name');
+	if (proto && (name !== 'Object')) {
+		body.$prototype = _prepareObjectPrototypeResponse(context, proto);
+	}
 
 	return body;
 };
