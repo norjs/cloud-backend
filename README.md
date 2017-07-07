@@ -1,21 +1,12 @@
 Sendanor Cloud Backend
 ----------------------
 
-This will be a distributed Node.js backend for a single host system.
+This is a CLI application to run Sendanor's Cloud Service Framework.
 
-It can be controlled by:
+Install: `npm i -g @sendanor/cloud-backend`
 
-* Sendanor Cloud Manager -- a HTML 5 app
-* Sendanor Cloud CLI -- a command line tool
+Use as a client-verified protected HTTPS server: `cloud-backend ./TestService.js --ca-file=./ca-crt.pem --key-file=./localhost-key.pem --cert-file=./localhost-crt.pem --protocol=http`
 
-Features
---------
+Use as an unprotected HTTP server: `cloud-backend ./TestService.js --protocol=http`
 
- * Host system route management (TODO)
- * Host system firewall management with iptables (TODO)
- * Host system vpn management with openvpn (TODO)
- * Manages local hosts file automatically (TODO)
- * Statistics about a host system (TODO)
- * User account management (TODO)
-   * Automatic replication (TODO)
- * Host system package management (TODO)
+Use without a server: `cloud-backend ./TestService.js`

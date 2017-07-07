@@ -63,7 +63,7 @@ if (argv._.length === 0) {
 
 	serviceCache.register(serviceCache);
 
-	if ( (!config.ca) || (!config.cert) || (!config.key) ) {
+	if ( (config.protocol === 'https') && ((!config.ca) || (!config.cert) || (!config.key)) ) {
 		console.log(usage);
 	} else {
 		Q.fcall(() => {
@@ -109,9 +109,10 @@ if (argv._.length === 0) {
 
 			debug.assert(config.protocol).ignore(undefined).is('string');
 			debug.assert(config.port).ignore(undefined).is('integer');
-			debug.assert(config.ca).is('string');
-			debug.assert(config.key).is('string');
-			debug.assert(config.cert).is('string');
+
+			debug.assert(config.ca).ignore(undefined).is('string');
+			debug.assert(config.key).ignore(undefined).is('string');
+			debug.assert(config.cert).ignore(undefined).is('string');
 
 			let serviceName = config.listen;
 			if (!serviceName) {

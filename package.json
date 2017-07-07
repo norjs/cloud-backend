@@ -3,10 +3,15 @@
   "version": "1.0.0",
   "description": "Sendanor's Cloud Backend",
   "main": "dist/index.js",
+  "bin": {
+    "cloud-backend": "dist/main.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "compile": "babel src --out-dir dist --presets=es2015",
-    "watch-compile": "babel --watch src --out-dir dist --presets=es2015"
+    "compile-examples": "babel examples --out-dir dist/examples --presets=es2015",
+    "watch-compile": "babel --watch src --out-dir dist --presets=es2015",
+    "prepublish": "npm run compile"
   },
   "repository": {
     "type": "git",
