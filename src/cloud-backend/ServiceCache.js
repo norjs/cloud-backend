@@ -40,11 +40,11 @@ export default class ServiceCache extends Service {
 		}
 	}
 
-	/** Returns the name of the service */
+	/** Returns all UUIDs for the service */
 	_getUUIDs (service_) {
 
 		if (is.uuid(service_)) {
-			return service_;
+			return [service_];
 		}
 
 		if (is.function(service_)) {
@@ -52,7 +52,7 @@ export default class ServiceCache extends Service {
 		}
 
 		if (is.string(service_)) {
-			return _.filter(this._services, service => service.name === service_).map(service => service.id);
+			return _.map(_.filter(this._services, service => service.name === service_), service => service.id);
 		}
 
 		return [];
@@ -119,7 +119,7 @@ export default class ServiceCache extends Service {
 	/** Returns service instance by name or Function */
 	_getInstances (service_) {
 		const uuids = this._getUUIDs(service_);
-		return _.map(uuids, uuid => this._services.hasOwnProperty(uuid) && this._services[uuid].instance);
+		return _.map(_.filter(uuids, uuid => this._services.hasOwnProperty(uuid) && this._services[uuid].instance), uuid => this._services[uuid].instance);
 	}
 
 	/** Returns service instance by name or Function */
@@ -133,7 +133,7 @@ export default class ServiceCache extends Service {
 		const services = this._getInstances(service_);
 
 		if (services.length === 0) {
-			throw new TypeError("Service(s) not found: " + this.getName(service_));
+			throw new TypeError("Service(s) not found: " + this._getName(service_));
 		}
 
 		if (services.length === 1) {

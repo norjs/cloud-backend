@@ -49,7 +49,7 @@ export default class TestService extends MicroService {
 
 	/** */
 	echo (value) {
-		return value;
+		return "Hello there! You sent: " + value;
 	}
 
 }

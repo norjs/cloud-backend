@@ -25,7 +25,7 @@ const createServerByProtocol = {
 			rejectUnauthorized: config.hasOwnProperty('rejectUnauthorized') ? !!config.rejectUnauthorized : true
 		};
 		//debug.log('https: options = ', options);
-		return https.createServer(options, requestHandler );
+		return https.createServer(options, requestHandler);
 	}
 };
 

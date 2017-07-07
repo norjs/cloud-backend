@@ -191,6 +191,44 @@ const _prepareErrorResponse = (context, code, message, exception) => {
 };
 
 /** */
+const parseRequestData = req => {
+	return Q.Promise((resolve, reject) => {
+
+		let errorListener, endListener;
+		let body = '';
+
+		const dataListener = data =>{
+
+			body += data;
+
+			// Too much POST data, kill the connection!
+			// 1e6 === 1 * Math.pow(10, 6) === 1 * 1000000 ~~~ 1MB
+			if (body.length > 1e6) {
+				req.removeListener('error', errorListener);
+				req.removeListener('end', endListener);
+				req.connection.destroy();
+				reject(new Error("Too much POST data detected. Connection closed."));
+			}
+		};
+
+		endListener = () =>{
+			req.removeListener('error', errorListener);
+			resolve(body);
+		};
+
+		errorListener = err =>{
+			req.removeListener('end', endListener);
+			reject(err);
+		};
+
+		req.on('data', dataListener);
+		req.once('end', endListener);
+		req.once('error', errorListener);
+
+	});
+};
+
+/** */
 const _createContext = req => {
 
 	const remoteAddress = _.get(req, 'connection.remoteAddress');
@@ -199,18 +237,23 @@ const _createContext = req => {
 	const method = _.toLower(req.method);
 	const url = req.url;
 
+	const $getBody = () => parseRequestData(req);
+
+	const $ref = basePath => {
+		if (basePath) {
+			return ref(req, url, basePath);
+		}
+		return ref(req, url);
+	};
+
 	return {
 		remoteAddress,
 		peerCert,
 		commonName,
 		method,
 		url,
-		$ref: basePath => {
-			if (basePath) {
-				return ref(req, url, basePath);
-			}
-			return ref(req, url);
-		}
+		$getBody,
+		$ref
 	};
 };
 
@@ -248,7 +291,12 @@ const _getContent = (context, content, parts) => {
 	if (is.function(value)) {
 		const method = context.method;
 		if (method === 'post') {
-			return _getContent(context, content[part](), parts);
+			return context.$getBody().then(body => {
+				body = JSON.parse(body);
+				const args = (body && body.$args) || [];
+				debug.assert(args).is('array');
+				return _getContent(context, content[part](...args), parts);
+			});
 		} else if (method === 'get') {
 			return _getContent(context, content[part], parts);
 		} else {
@@ -269,13 +317,15 @@ const _serviceRequestHandler = (content, req) => {
 		console.log(new Date() + ' | ' + context.remoteAddress +' | ' + context.commonName +' | ' + context.method +' | ' + context.url);
 
 		const parts = _splitURL(context.url);
-		const subContent = _getContent(context, content, parts);
 
-		if (subContent !== undefined) {
-			return _prepareResponse(context, subContent);
-		} else {
-			return _prepareErrorResponse(context, 404, 'Not Found');
-		}
+		return Q.when(_getContent(context, content, parts)).then(subContent => {
+			if (subContent !== undefined) {
+				return _prepareResponse(context, subContent);
+			} else {
+				return _prepareErrorResponse(context, 404, 'Not Found');
+			}
+		});
+
 	});
 };
 
@@ -284,26 +334,35 @@ const serviceRequestHandler = (serviceName, getInstance) => {
 	debug.assert(serviceName).is('string');
 	debug.assert(getInstance).is('function');
 	return (req, res) => {
+		debug.log('serviceName = ', serviceName);
+		return Q.fcall(() => {
 
-		const serviceInstance = getInstance(serviceName);
-		if (is.array(serviceInstance)) {
-			serviceInstance = _.first(serviceInstance);
-		}
-		debug.assert(serviceInstance).is('object');
+			return Q.when(getInstance(serviceName)).then(serviceInstance => {
 
-		return Q.when(_serviceRequestHandler(serviceInstance, req)).then(body => {
-			const type = body && body.$type || '';
-			const isError = type === 'error';
-			const statusCode = _.get(body, '$statusCode') || 200;
-			return reply(res, body, statusCode);
+				if (is.array(serviceInstance)) {
+					serviceInstance = _.first(serviceInstance);
+				}
+
+				debug.assert(serviceInstance).is('object');
+
+				return Q.when(_serviceRequestHandler(serviceInstance, req)).then(body => {
+					console.log('body = ', body);
+					const type = body && body.$type || '';
+					const isError = type === 'error';
+					const statusCode = _.get(body, '$statusCode') || 200;
+					return reply(res, body, statusCode);
+				});
+			});
+
 		}).fail(err => {
 			debug.error('Error: ', err);
 			const code = 500;
 			const error = "Internal Service Error";
 			return reply(res, _prepareErrorResponse(_createContext(req), code, error, err), code);
 		}).fail(err => {
-			debug.error('Unespected error while handling error:', err);
+			debug.error('Unexpected error while handling error:', err);
 		});
+
 	};
 };
 

@@ -57,6 +57,8 @@ if (argv._.length === 0) {
 
 	const serviceCache = new ServiceCache();
 
+	let firstServiceUUID;
+
 	//config.serviceCache = serviceCache;
 
 	serviceCache.register(serviceCache);
@@ -72,7 +74,11 @@ if (argv._.length === 0) {
 				const Service = getServiceByName(servicePath);
 				debug.assert(Service).is('function');
 
-				return serviceCache.register(Service);
+				const uuid = serviceCache.register(Service);
+				if (!firstServiceUUID) {
+					firstServiceUUID = uuid;
+				}
+				return uuid;
 
 			})).then(() => {
 				console.log('All services created.');
@@ -109,7 +115,7 @@ if (argv._.length === 0) {
 
 			let serviceName = config.listen;
 			if (!serviceName) {
-				serviceName = _.first(serviceCache.getUUIDs());
+				serviceName = firstServiceUUID;
 			}
 
 			const requestHandler = serviceRequestHandler(serviceName, name => serviceCache.get(name));

@@ -10,7 +10,7 @@ const startService = (serviceId, globalConfig) => {
 	debug.assert(serviceId).is('uuid');
 	debug.assert(globalConfig).ignore(undefined).is('object');
 
-
+	throw new Error("Depricated");
 };
 
 export default startService;
