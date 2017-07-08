@@ -3,6 +3,7 @@ import Service from './Service';
 import is from 'nor-is';
 import debug from 'nor-debug';
 import uuidv4 from 'uuid/v4';
+import moment from 'moment';
 
 export default class ServiceCache extends Service {
 
@@ -70,7 +71,7 @@ export default class ServiceCache extends Service {
 			//type: service_,
 			instance: new service_()
 		};
-		console.log('[ServiceCache] Registered ' + serviceName + ' with UUID ' + uuid);
+		console.log(moment().format() + ' [ServiceCache] Registered ' + serviceName + ' with UUID ' + uuid);
 		return uuid;
 	}
 
@@ -91,7 +92,7 @@ export default class ServiceCache extends Service {
 			//type: serviceConstructor,
 			instance: service_
 		};
-		console.log('[ServiceCache] Registered ' + serviceName + ' with UUID ' + uuid);
+		console.log(moment().format() + ' [ServiceCache] Registered ' + serviceName + ' with UUID ' + uuid);
 		return uuid;
 	}
 

@@ -30,9 +30,11 @@
   },
   "dependencies": {
     "@sendanor/cloud-common": "^1.0.0",
+    "apache-md5": "^1.1.2",
     "globals": "^10.0.0",
     "lodash": "^4.17.4",
     "minimist": "^1.2.0",
+    "moment": "^2.18.1",
     "nor-debug": "^1.0.0",
     "nor-errors": "^1.0.0",
     "nor-ref": "^1.0.0",
