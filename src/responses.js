@@ -199,6 +199,11 @@ export function prepareErrorResponse (context, code, message, exception) {
 
 /** */
 export function createContext (req) {
+	debug.assert(req).is('object');
+
+	if (req.$context) {
+		return req.$context;
+	}
 
 	const remoteAddress = _.get(req, 'connection.remoteAddress');
 	const peerCert = req.socket && req.socket.getPeerCertificate && req.socket.getPeerCertificate();
@@ -225,7 +230,7 @@ export function createContext (req) {
 		return ref(req, url);
 	};
 
-	return {
+	const $context = req.$context = {
 		remoteAddress,
 		peerCert,
 		commonName,
@@ -236,4 +241,6 @@ export function createContext (req) {
 		$ref,
 		$getIdentity
 	};
+
+	return $context;
 }

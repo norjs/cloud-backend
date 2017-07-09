@@ -19,14 +19,18 @@ function jsonReply (content) {
 	return JSON.stringify(content, null, 2) + "\n";
 }
 
+const NS_PER_SEC = 1e9;
+
 /** Send a response */
 function reply (context, res, body, status=200) {
-	const identity = context.$getIdentity();
-	console.log(moment().format() + ' [' + (identity ? identity + '@' : '') + context.remoteAddress+'] ' + context.method.toUpperCase() + ' ' + status + ' ' + context.url);
-
 	debug.assert(status).is('number');
 	res.writeHead(status);
 	res.end( jsonReply(body) );
+
+	const identity = context.$getIdentity();
+	const diff = process.hrtime(context.$hrtime);
+	const time = (diff[0] * NS_PER_SEC + diff[1]) / 1000000;
+	console.log(moment().format() + ' [' + (identity ? identity + '@' : '') + context.remoteAddress+'] ' + context.method.toUpperCase() + ' ' + status + ' ' + context.url + ' ['+time+']');
 }
 
 /** Build a HTTP(s) request handler. This handler handles the core functionality; exception handling, etc.
@@ -35,13 +39,35 @@ function reply (context, res, body, status=200) {
  */
 export default function coreRequestHandler (next) {
 	return (req, res) => {
+		const $hrtime = process.hrtime();
 		return Q.fcall(() => {
 			return Q.when(next(req, res)).then(body => {
 				//console.log('body = ', body);
+
 				const context = createContext(req);
+
+				context.$hrtime = $hrtime;
+
 				const type = body && body.$type || '';
+				const hash = body && body.$hash || '';
 				const isError = type === 'error';
 				const statusCode = _.get(body, '$statusCode') || 200;
+
+				if (!isError) {
+					const ifNoneMatch = req.headers['if-none-match'] || '';
+					//debug.log('headers = "' + Object.keys(req.headers) + '"');
+					//debug.log('ifNoneMatch = "' + ifNoneMatch + '"');
+
+					if (ifNoneMatch && hash && (ifNoneMatch === hash)) {
+						return reply(context, res, {}, 304); // Not Modified
+					}
+
+					if (hash) {
+						res.setHeader('Cache-Control', 'private, max-age=31557600');
+						res.setHeader("ETag", hash);
+					}
+				}
+
 				return reply(context, res, body, statusCode);
 			});
 		}).fail(err => {
