@@ -158,6 +158,8 @@ export default class ServiceCache extends Service {
 
 		const instance = new service_(...injectedServices);
 
+		//debug.log('instance = ', instance);
+
 		this._services[uuid] = {
 			id: uuid,
 			name: serviceName,
@@ -194,7 +196,9 @@ export default class ServiceCache extends Service {
 	_getInstances (service_) {
 		const uuids = this._getUUIDs(service_);
 		//debug.log('uuids = ', uuids);
-		return _.map(_.filter(uuids, uuid => _.has(this._services, uuid) && this._services[uuid].instance), uuid => this._services[uuid].instance);
+		return _.map(_.filter(uuids, uuid => _.has(this._services, uuid) && this._services[uuid].instance),
+			uuid => this._services[uuid].instance
+		);
 	}
 
 	/** Returns a list of registered service names. */

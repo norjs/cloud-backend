@@ -29,20 +29,25 @@ function _parseJson (body) {
 }
 
 /** */
-function _getContentFunctionCall (context, value, parts, body) {
+function _getContentFunctionCall (context, content, part, parts, body) {
 	body = _parseJson(body);
 	const args = (body && body.$args) || [];
 	debug.assert(args).is('array');
-	return _getContent(context, value(...args), parts);
+	return _getContent(context, content[part](...args), parts);
 }
 
 /** Recursively get content */
 function _getContent (context, content, parts) {
 	debug.assert(parts).is('array');
 
+	//debug.log('content =', content);
+
 	//debug.log('_getContent(', content, ', ', parts, ')');
 
-	if (parts.length === 0) return content;
+	if (parts.length === 0) {
+		//debug.log('content =', content);
+		return content;
+	}
 
 	const part = parts.shift();
 	//debug.log('part =', part);
@@ -51,24 +56,26 @@ function _getContent (context, content, parts) {
 
 	debug.assert(content).is('object');
 
-	const value = content[part];
-	//debug.log('value = ', value);
-
-	if (is.function(value)) {
+	if (is.function(content[part])) {
 		const method = context.method;
+
 		if (method === 'post') {
-			return context.$getBody().then(body => _getContentFunctionCall(context, value, parts, body) );
-		} else if (method === 'get') {
-			return _getContent(context, content[part], parts);
-		} else {
-			throw new HTTPError(405);
+			return context.$getBody().then(body => _getContentFunctionCall(context, content, part, parts, body) );
 		}
+
+		if (method === 'get') {
+			return _getContent(context, content[part], parts);
+		}
+
+		throw new HTTPError(405);
+
 	} else {
-		return _getContent(context, value, parts);
+		return _getContent(context, content[part], parts);
 	}
 }
 
 function __serviceRequestParseSubContent (context, subContent) {
+	//debug.log('subContent = ', subContent);
 	if (subContent !== undefined) {
 		return prepareResponse(context, subContent);
 	} else {
@@ -86,9 +93,11 @@ function ___serviceRequestHandler (content, req) {
 
 /** */
 function __serviceRequestHandler (serviceInstance, req) {
+	//debug.log('serviceInstance = ', serviceInstance);
 	if (is.array(serviceInstance)) {
 		serviceInstance = _.first(serviceInstance);
 	}
+	//debug.log('serviceInstance = ', serviceInstance);
 	debug.assert(serviceInstance).is('defined');
 	return Q.fcall( () => ___serviceRequestHandler(serviceInstance, req));
 }

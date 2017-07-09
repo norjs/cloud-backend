@@ -1,6 +1,11 @@
 import MicroService from './MicroService';
 
+import moment from 'moment';
+
 export default class TestService extends MicroService {
+	$onDestroy () {
+		return super.$onDestroy();
+	}
 
 	/** The constructor is called when the backend starts */
 	constructor () {
@@ -50,6 +55,11 @@ export default class TestService extends MicroService {
 	/** */
 	echo (value) {
 		return "Hello there! You sent: " + value;
+	}
+
+	get time () {
+		if (Math.random() > 0.9) return Date.now();
+		return 'Test';
 	}
 
 }

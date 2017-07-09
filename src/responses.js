@@ -17,9 +17,25 @@ const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = !isProduction;
 
 /** */
-export function prepareObjectPrototypeResponse (context, content) {
+export function prepareObjectPrototypeResponse (context, content, parent) {
+
+	//debug.log('parent [#1] = ', parent);
+
 	const properties = getAllKeys(content).filter(notPrivate);
-	const methods = _.filter(properties, key => is.func(content[key]));
+
+	//debug.log('parent [#1.1] = ', parent);
+	//debug.log('content = ', content);
+	//debug.log('properties = ', properties);
+
+	const methods = _.filter(properties, key => {
+		const type = Object.getOwnPropertyDescriptor(content, key);
+		//debug.log('type = ', type);
+		if (type && type.get) return false;
+		if (type && type.set) return false;
+		return is.func(content[key]);
+	});
+
+	//debug.log('parent [#2] = ', parent);
 
 	//debug.log("content = ", content);
 	//debug.log("methods = ", methods);
@@ -28,6 +44,8 @@ export function prepareObjectPrototypeResponse (context, content) {
 
 	//const $constructor = _.get(content, 'constructor');
 	const $name = _.get(content, 'constructor.name');
+
+	//debug.log('parent [#3] = ', parent);
 
 	let constructors = getConstructors(content);
 	if (constructors) {
@@ -41,6 +59,8 @@ export function prepareObjectPrototypeResponse (context, content) {
 		constructors = [];
 	}
 
+	//debug.log('parent [#4] = ', parent);
+
 	let body = {
 		$id: null,
 		$hash: null,
@@ -50,6 +70,8 @@ export function prepareObjectPrototypeResponse (context, content) {
 		//$args: parseFunctionArgumentNames($constructor)
 	};
 
+	//debug.log('parent [#5] = ', parent);
+
 	_.forEach(methods, method => body[method] = prepareFunctionResponse(context, content[method], context.$ref(method)) );
 
 	let id, hash;
@@ -58,11 +80,15 @@ export function prepareObjectPrototypeResponse (context, content) {
 	body.$id = id;
 	body.$hash = hash;
 
+	//debug.log('parent [#6] = ', parent);
+
 	return body;
 }
 
 /** */
 export function prepareObjectResponse (context, content) {
+
+	//debug.log('content [before] = ', content);
 
 	const properties = Object.getOwnPropertyNames(content).filter(notPrivate);
 	const methods = _.filter(properties, key => is.func(content[key]));
@@ -75,6 +101,8 @@ export function prepareObjectResponse (context, content) {
 	//debug.log("members = ", members);
 	//debug.log("properties = ", properties);
 
+	//debug.log('content [after#1] = ', content);
+
 	let body = {
 		$id: null,
 		$hash: null,
@@ -84,19 +112,30 @@ export function prepareObjectResponse (context, content) {
 
 	_.forEach(members, member => body[member] = _.cloneDeep(content[member]) );
 
+	//debug.log('content [after#2] = ', content);
+
 	_.forEach(methods, method => body[method] = prepareFunctionResponse(context, content[method], context.$ref(method)) );
 
 	let id, hash;
 	[id, hash] = createBodyIDs(body);
 
+	//debug.log('content [after#3] = ', content);
+
 	body.$id = id;
 	body.$hash = hash;
+
+	//debug.log('content [after#4] = ', content);
 
 	const proto = Object.getPrototypeOf(content);
 	const name = proto && _.get(proto, 'constructor.name');
 	if (proto && (name !== 'Object')) {
-		body.$prototype = prepareObjectPrototypeResponse(context, proto);
+		//debug.log('content [after#4.1] = ', content);
+		body.$prototype = prepareObjectPrototypeResponse(context, proto, content);
+		//debug.log('content [after#4.2] = ', content);
 	}
+
+	//debug.log('content [after#5] = ', content);
+
 
 	return body;
 }
@@ -195,7 +234,7 @@ export function prepareErrorResponse (context, code, message, exception) {
 
 function _getIdentity (req, commonName) {
 	const unverifiedUser_ = req.unverifiedUser ? '~' + req.unverifiedUser : '';
-	//debug.log('unverifiedUser_ = ', unverifiedUser_);
+	////debug.log('unverifiedUser_ = ', unverifiedUser_);
 	const user_ = req.user ? '' + req.user : unverifiedUser_;
 	//debug.log('user_ = ', user_);
 	return (commonName ? '+' + commonName : user_);
@@ -207,6 +246,8 @@ function _ref (basePath, req, url) {
 	}
 	return ref(req, url);
 }
+
+const NS_PER_SEC = 1e9;
 
 class Context {
 
@@ -234,6 +275,15 @@ class Context {
 
 	$getTime () {
 		return this.time;
+	}
+
+	$getTimeDiff () {
+		let diff;
+		const hrtime = this.time;
+		if (hrtime) {
+			diff = process.hrtime(hrtime);
+			return (diff[0] * NS_PER_SEC + diff[1]) / 1000000;
+		}
 	}
 
 }

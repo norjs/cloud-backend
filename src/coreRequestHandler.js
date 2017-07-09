@@ -7,6 +7,7 @@ import debug from 'nor-debug';
 import { HTTPError } from 'nor-errors';
 import { createBodyIDs } from '@sendanor/cloud-common';
 import moment from 'moment';
+import querystring from 'querystring';
 
 //const isProduction = process.env.NODE_ENV === 'production';
 //const isDevelopment = !isProduction;
@@ -14,12 +15,14 @@ import moment from 'moment';
 import { createContext } from './responses.js';
 import { prepareErrorResponse } from './responses.js';
 
+const NS_PER_SEC = 1e9;
+const longPollingWatchDelay = parseInt(process.env.CLOUD_CLIENT_LONG_POLLING_SERVER_WATCH_DELAY || 500, 10); // ms
+
 /** Send a reply in JSON format */
 function jsonReply (content) {
 	return JSON.stringify(content, null, 2) + "\n";
 }
 
-const NS_PER_SEC = 1e9;
 
 /** Send a response */
 function reply (context, res, body, status=200) {
@@ -27,27 +30,24 @@ function reply (context, res, body, status=200) {
 	res.writeHead(status);
 
 	const method = context.method.toUpperCase();
-	if (method === 'HEAD') {
+	if ((!body) || (method === 'HEAD')) {
 		res.end();
 	} else {
 		res.end( jsonReply(body) );
 	}
 
 	// Logging
-	let diff;
-	const hrtime = context.$getTime();
-	//debug.log('hrtime = ', hrtime);
-	let time;
-	if (hrtime) {
-		diff = process.hrtime(hrtime);
-		time = (diff[0] * NS_PER_SEC + diff[1]) / 1000000;
-	}
+	const time = context.$getTimeDiff();
 	const identity = context.$getIdentity();
 	console.log(moment().format() + ' [' + (identity ? identity + '@' : '') + context.remoteAddress+'] ' + method + ' ' + status + ' ' + context.url + ' ['+time+']');
 }
 
+function setTimeoutPromise (f, time) {
+	return Q.Promise( resolve => setTimeout(() => resolve(Q.fcall(f)), time) );
+}
+
 /** */
-function _coreRequestResponseHandler (req, res, body) {
+function _coreRequestResponseHandler (req, res, body, next) {
 	//console.log('body = ', body);
 
 	const context = createContext(req);
@@ -58,18 +58,33 @@ function _coreRequestResponseHandler (req, res, body) {
 
 	if ( (!isError) && (statusCode >= 200) && (statusCode < 300) ) {
 		const hash = body && body.$hash || '';
+		const preferStr = req.headers['prefer'] || '';
+		const prefer = preferStr && querystring.parse(preferStr, ';');
+		const preferWait = prefer && prefer.wait ? parseInt(prefer.wait, 10) : undefined;
 		const ifNoneMatch = req.headers['if-none-match'] || '';
 		//debug.log('headers = "' + Object.keys(req.headers) + '"');
 		//debug.log('ifNoneMatch = "' + ifNoneMatch + '"');
 
 		if (ifNoneMatch && hash && (ifNoneMatch === hash)) {
-			return reply(context, res, {}, 304); // Not Modified
+
+			const $statusCode = 304;
+
+			// If user prefers to wait, let's wait. FIXME: Implement return sooner if conditions change.
+			if (preferWait) {
+				const time = context.$getTimeDiff();
+				if (time/1000 < preferWait) {
+					return setTimeoutPromise(() => _coreRequestHandlerWithoutErrorHandling(req, res, next), longPollingWatchDelay);
+				}
+			}
+
+			return reply(context, res, null, $statusCode); // Not Modified
 		}
 
 		if (hash) {
 			res.setHeader('Cache-Control', 'private, max-age=31557600');
 			res.setHeader("ETag", hash);
 		}
+
 	}
 
 	return reply(context, res, body, statusCode);
@@ -77,7 +92,7 @@ function _coreRequestResponseHandler (req, res, body) {
 
 /** */
 function _coreRequestHandlerWithoutErrorHandling (req, res, next) {
-	return Q.when(next(req, res)).then(body => _coreRequestResponseHandler(req, res, body));
+	return Q.when(next(req, res)).then(body => _coreRequestResponseHandler(req, res, body, next));
 }
 
 function unexpectedErrorHandler (err) {

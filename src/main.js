@@ -162,7 +162,9 @@ if (argv._.length === 0) {
 				serviceName = firstServiceUUID;
 			}
 
-			let requestHandler = serviceRequestHandler(serviceName, name => serviceCache.get(name));
+			let requestHandler = serviceRequestHandler(serviceName,
+				name => serviceCache.get(name)
+			);
 			debug.assert(requestHandler).is('function');
 
 			// Enable optional auth supports
