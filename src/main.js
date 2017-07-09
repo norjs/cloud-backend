@@ -46,6 +46,7 @@ if (argv._.length === 0) {
 
 		const camelCaseKey = _.camelCase(key);
 
+		// --auth
 		if (camelCaseKey === 'auth') {
 			value = is.array(value) ? value : [value];
 			debug.assert(value).is('array');
@@ -79,10 +80,12 @@ if (argv._.length === 0) {
 			return;
 		}
 
+		// --*File
 		if (camelCaseKey.substr(-4, 4) === 'File') {
 			config[camelCaseKey.substr(0, camelCaseKey.length - 4)] = fs.readFileSync(value, {encoding:'utf8'});
 		}
 
+		// Other, directly
 		config[camelCaseKey] = value;
 	});
 
@@ -108,20 +111,18 @@ if (argv._.length === 0) {
 
 			return Q.all(_.map(servicePaths, servicePath => {
 				debug.assert(servicePath).is('string');
-
-				const Service = getServiceByName(servicePath);
-				debug.assert(Service).is('function');
-
-				const uuid = serviceCache.register(Service);
-				if (!firstServiceUUID) {
-					firstServiceUUID = uuid;
-				}
-				return uuid;
-
+				return getServiceByName(servicePath).then(Service => {
+					debug.assert(Service).is('defined');
+					const uuid = serviceCache.register(Service);
+					if (!firstServiceUUID) {
+						firstServiceUUID = uuid;
+					}
+					return uuid;
+				});
 			})).then(() => {
 				console.log(moment().format() + ' [main] All services created.');
 			}).fail(err => {
-				debug.error('Failed to start some services: ', err);
+				debug.error('Failed to start some services: ' + ((err && err.message) || ''+err) );
 				return Q.reject(err);
 			});
 
@@ -135,7 +136,7 @@ if (argv._.length === 0) {
 			})).then(() => {
 				console.log(moment().format() + ' [main] All services initialized.');
 			}).fail(err => {
-				debug.error('Failed to initialize some services: ', err);
+				debug.error('Failed to initialize some services: ' + ((err && err.message) || ''+err));
 				return Q.reject(err);
 			});
 

@@ -22,6 +22,12 @@ function _splitURL (url) {
 	return parts;
 }
 
+/** Try to parse JSON, if it looks like JSON */
+function _parseJson (body) {
+	if (!body) return;
+	return JSON.parse(body);
+}
+
 /** Recursively get content */
 function _getContent (context, content, parts) {
 	debug.assert(parts).is('array');
@@ -44,7 +50,7 @@ function _getContent (context, content, parts) {
 		const method = context.method;
 		if (method === 'post') {
 			return context.$getBody().then(body => {
-				body = JSON.parse(body);
+				body = _parseJson(body);
 				const args = (body && body.$args) || [];
 				debug.assert(args).is('array');
 				return _getContent(context, content[part](...args), parts);

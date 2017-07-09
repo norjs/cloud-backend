@@ -1,6 +1,6 @@
 {
   "name": "@sendanor/cloud-backend",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Sendanor's Cloud Backend",
   "main": "dist/index.js",
   "bin": {
@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@sendanor/cloud-common": "^1.0.0",
+    "@sendanor/cloud-client": "^1.0.0",
     "apache-md5": "^1.1.2",
     "globals": "^10.0.0",
     "lodash": "^4.17.4",
