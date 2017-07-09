@@ -26,7 +26,7 @@ export function prepareObjectPrototypeResponse (context, content) {
 	//debug.log("members = ", members);
 	//debug.log("properties = ", properties);
 
-	const $constructor = _.get(content, 'constructor');
+	//const $constructor = _.get(content, 'constructor');
 	const $name = _.get(content, 'constructor.name');
 
 	let constructors = getConstructors(content);
@@ -46,8 +46,8 @@ export function prepareObjectPrototypeResponse (context, content) {
 		$hash: null,
 		$ref: context.$ref(),
 		$name,
-		$type: [$name].concat(constructors),
-		$args: parseFunctionArgumentNames($constructor)
+		$type: [$name].concat(constructors)
+		//$args: parseFunctionArgumentNames($constructor)
 	};
 
 	_.forEach(methods, method => {

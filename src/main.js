@@ -102,25 +102,28 @@ if (argv._.length === 0) {
 
 	//config.serviceCache = serviceCache;
 
-	serviceCache.register(serviceCache);
-
 	if ( (config.protocol === 'https') && ((!config.ca) || (!config.cert) || (!config.key)) ) {
 		console.log(usage);
 	} else {
 		Q.fcall(() => {
 
-			return Q.all(_.map(servicePaths, servicePath => {
-				debug.assert(servicePath).is('string');
-				return getServiceByName(servicePath).then(Service => {
-					debug.assert(Service).is('defined');
-					const uuid = serviceCache.register(Service);
-					if (!firstServiceUUID) {
-						firstServiceUUID = uuid;
-					}
-					return uuid;
+			return Q.fcall( () => {
+				return serviceCache.register(serviceCache).then(() => {
+					return Q.all(_.map(servicePaths, servicePath => {
+						debug.assert(servicePath).is('string');
+						return getServiceByName(servicePath).then(Service => {
+							debug.assert(Service).is('defined');
+							return serviceCache.register(Service).then(uuid => {
+								if (!firstServiceUUID) {
+									firstServiceUUID = uuid;
+								}
+								return uuid;
+							});
+						});
+					})).then(() => {
+						console.log(moment().format() + ' [main] All services started.');
+					});
 				});
-			})).then(() => {
-				console.log(moment().format() + ' [main] All services created.');
 			}).fail(err => {
 				debug.error('Failed to start some services: ' + ((err && err.message) || ''+err) );
 				return Q.reject(err);
@@ -128,12 +131,13 @@ if (argv._.length === 0) {
 
 		}).then(() => {
 
-			return Q.all(serviceCache.getUUIDs().map(uuid => {
-				const instance = serviceCache.get(uuid);
-				if (is.function(instance.$onInit)) {
-					return instance.$onInit();
-				}
-			})).then(() => {
+			return serviceCache.getUUIDs().then(uuids => Q.all(_.map(uuids, uuid => {
+				return serviceCache.get(uuid).then(instance => {
+					if (instance && is.function(instance.$onInit)) {
+						return instance.$onInit();
+					}
+				});
+			}))).then(() => {
 				console.log(moment().format() + ' [main] All services initialized.');
 			}).fail(err => {
 				debug.error('Failed to initialize some services: ' + ((err && err.message) || ''+err));
@@ -173,7 +177,9 @@ if (argv._.length === 0) {
 			return createServer(config, requestHandler).then(() => {
 				let name = serviceName;
 				if (is.uuid(name)) {
-					name = serviceCache.getNameById(name);
+					return serviceCache.getNameById(name).then(name_ => {
+						console.log(moment().format() + ' [main] Service ' + name_ + ' started at port ' + (config.port||3000) + ' as ' + (config.protocol||'https') );
+					});
 				}
 				console.log(moment().format() + ' [main] Service ' + name + ' started at port ' + (config.port||3000) + ' as ' + (config.protocol||'https') );
 			});
