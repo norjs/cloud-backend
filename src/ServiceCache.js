@@ -7,6 +7,10 @@ import uuidv4 from 'uuid/v4';
 import moment from 'moment';
 import { parseFunctionArgumentNames } from './helpers.js';
 
+function __matchName (serviceName, s) {
+	return s && (s.name === serviceName);
+}
+
 export default class ServiceCache extends Service {
 
 	/** The constructor is called when the backend starts */
@@ -22,14 +26,8 @@ export default class ServiceCache extends Service {
 
 	/** */
 	_existsName (service_) {
-		//debug.log("service_ =", service_);
 		const keys = Object.keys(this._services);
-		//debug.log("keys =", keys);
-		return _.some(keys, id => {
-			//debug.log('s = ', s);
-			const s = this._services[id];
-			return s && (s.name === service_);
-		});
+		return _.some(keys, id => __matchName(service_, this._services[id]) );
 	}
 
 	/** */
@@ -237,10 +235,8 @@ export default class ServiceCache extends Service {
 
 	/** Returns service name by UUID */
 	getNameById (serviceId) {
-		return Q.fcall(() => {
-			debug.assert(serviceId).is('uuid');
-			return _.get(this._services[serviceId], 'name');
-		});
+		debug.assert(serviceId).is('uuid');
+		return Q.resolve(_.get(this._services[serviceId], 'name'));
 	}
 
 	/** Returns service instance by name, synchronously */
@@ -263,25 +259,22 @@ export default class ServiceCache extends Service {
 		return Q.fcall(() => this._get(service_));
 	}
 
+	_getAll (service_) {
+		const services = this._getInstances(service_);
+		if (services.length === 0) {
+			throw new TypeError("Service not found: " + this._getName(service_));
+		}
+		return services;
+	}
+
 	/** Returns service instance by name */
 	getAll (service_) {
-		return Q.fcall(() => {
-
-			const services = this._getInstances(service_);
-
-			if (services.length === 0) {
-				throw new TypeError("Service not found: " + this._getName(service_));
-			}
-
-			return services;
-		});
+		return Q.fcall(() => this._getAll(service_));
 	}
 
 	/** Returns a list of registered service UUIDs */
 	getUUIDs () {
-		return Q.fcall(() => {
-			return Object.keys(this._services);
-		});
+		return Q.resolve(Object.keys(this._services));
 	}
 
 }

@@ -50,9 +50,7 @@ export function prepareObjectPrototypeResponse (context, content) {
 		//$args: parseFunctionArgumentNames($constructor)
 	};
 
-	_.forEach(methods, method => {
-		body[method] = prepareFunctionResponse(context, content[method], context.$ref(method));
-	});
+	_.forEach(methods, method => body[method] = prepareFunctionResponse(context, content[method], context.$ref(method)) );
 
 	let id, hash;
 	[id, hash] = createBodyIDs(body);
@@ -84,13 +82,9 @@ export function prepareObjectResponse (context, content) {
 		$type: getConstructors(content)
 	};
 
-	_.forEach(members, member => {
-		body[member] = _.cloneDeep(content[member]);
-	});
+	_.forEach(members, member => body[member] = _.cloneDeep(content[member]) );
 
-	_.forEach(methods, method => {
-		body[method] = prepareFunctionResponse(context, content[method], context.$ref(method));
-	});
+	_.forEach(methods, method => body[method] = prepareFunctionResponse(context, content[method], context.$ref(method)) );
 
 	let id, hash;
 	[id, hash] = createBodyIDs(body);
@@ -107,6 +101,12 @@ export function prepareObjectResponse (context, content) {
 	return body;
 }
 
+function notArgumentsOrCaller (key) {
+	if (key === 'arguments') return false;
+	if (key === 'caller') return false;
+	return true;
+}
+
 /** */
 export function prepareFunctionResponse (context, f, ref) {
 	debug.assert(context).is('object');
@@ -119,13 +119,7 @@ export function prepareFunctionResponse (context, f, ref) {
 		$args: parseFunctionArgumentNames(f)
 	};
 
-	getAllKeys(f).filter(notPrivate).filter(key => {
-		if(key === 'arguments') return false;
-		if(key === 'caller') return false;
-		return true;
-	}).filter(key => notFunction(f[key])).forEach(key => {
-		body[key] = f[key];
-	});
+	getAllKeys(f).filter(notPrivate).filter(notArgumentsOrCaller).filter(key => notFunction(f[key])).forEach( key => body[key] = f[key] );
 
 	return body;
 }
@@ -159,6 +153,13 @@ export function prepareResponse (context, content) {
 	return prepareScalarResponse(context, content);
 }
 
+function _parseExceptionProperty (key, value) {
+	if (key === 'stack') {
+		return _.split(value, "\n");
+	}
+	return value;
+}
+
 /** */
 export function prepareErrorResponse (context, code, message, exception) {
 
@@ -185,62 +186,61 @@ export function prepareErrorResponse (context, code, message, exception) {
 		body.exception = {
 			$type: getConstructors(exception)
 		};
-		_.forEach(getAllKeys(exception).filter(notPrivate).filter(notFunction), key => {
-			if (key === 'stack') {
-				body.exception[key] = _.split(exception[key], "\n");
-			} else {
-				body.exception[key] = exception[key];
-			}
-		});
+		_.forEach(getAllKeys(exception).filter(notPrivate).filter(notFunction),
+			key => body.exception[key] = _parseExceptionProperty(key, exception[key]) );
 	}
 
 	return body;
 }
 
+function _getIdentity (req, commonName) {
+	const unverifiedUser_ = req.unverifiedUser ? '~' + req.unverifiedUser : '';
+	//debug.log('unverifiedUser_ = ', unverifiedUser_);
+	const user_ = req.user ? '' + req.user : unverifiedUser_;
+	//debug.log('user_ = ', user_);
+	return (commonName ? '+' + commonName : user_);
+}
+
+function _ref (basePath, req, url) {
+	if (basePath) {
+		return ref(req, url, basePath);
+	}
+	return ref(req, url);
+}
+
+class Context {
+
+	constructor (req) {
+		this.req = req;
+		this.remoteAddress = _.get(req, 'connection.remoteAddress');
+		this.peerCert = req.socket && req.socket.getPeerCertificate && req.socket.getPeerCertificate();
+		this.commonName = _.get(this.peerCert, 'subject.CN');
+		this.method = _.toLower(req.method);
+		this.url = req.url;
+		this.unverifiedUser = req.unverifiedUser;
+		this.user = req.user;
+		this.time = null;
+	}
+
+	$getIdentity () { return _getIdentity(this.req, this.commonName); }
+
+	$getBody () { return parseRequestData(this.req); }
+
+	$ref (basePath) { return _ref(basePath, this.req, this.url); }
+
+	$setTime (time) {
+		this.time = time;
+	}
+
+	$getTime () {
+		return this.time;
+	}
+
+}
+
 /** */
 export function createContext (req) {
 	debug.assert(req).is('object');
-
-	if (req.$context) {
-		return req.$context;
-	}
-
-	const remoteAddress = _.get(req, 'connection.remoteAddress');
-	const peerCert = req.socket && req.socket.getPeerCertificate && req.socket.getPeerCertificate();
-	const commonName = _.get(peerCert, 'subject.CN');
-	const method = _.toLower(req.method);
-	const url = req.url;
-	//const unverifiedUser = req.unverifiedUser;
-	const user = req.user;
-
-	const $getIdentity = () => {
-		const unverifiedUser_ = req.unverifiedUser ? '~' + req.unverifiedUser : '';
-		//debug.log('unverifiedUser_ = ', unverifiedUser_);
-		const user_ = req.user ? '' + req.user : unverifiedUser_;
-		//debug.log('user_ = ', user_);
-		return (commonName ? '+' + commonName : user_);
-	};
-
-	const $getBody = () => parseRequestData(req);
-
-	const $ref = basePath => {
-		if (basePath) {
-			return ref(req, url, basePath);
-		}
-		return ref(req, url);
-	};
-
-	const $context = req.$context = {
-		remoteAddress,
-		peerCert,
-		commonName,
-		user,
-		method,
-		url,
-		$getBody,
-		$ref,
-		$getIdentity
-	};
-
-	return $context;
+	if (req.$context) return req.$context;
+	return req.$context = new Context(req);
 }

@@ -34,16 +34,18 @@ export function getServiceByURL (name) {
 	return cloudClient(name);
 }
 
+function _getServiceByName (name) {
+	debug.assert(name).is('string');
+	if (is.url(name)) return getServiceByURL(name);
+	return getServiceByRequire(name);
+}
+
 /** Get a Service class from a service name
  * @param name {String} The service module name based on CWD
  * @returns {Function} The class for specific service
  */
 export function getServiceByName (name) {
-	return Q.fcall(() => {
-		debug.assert(name).is('string');
-		if (is.url(name)) return getServiceByURL(name);
-		return getServiceByRequire(name);
-	});
+	return Q.fcall(() => _getServiceByName(name));
 }
 
 export default getServiceByName;

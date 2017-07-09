@@ -28,6 +28,14 @@ function _parseJson (body) {
 	return JSON.parse(body);
 }
 
+/** */
+function _getContentFunctionCall (context, value, parts, body) {
+	body = _parseJson(body);
+	const args = (body && body.$args) || [];
+	debug.assert(args).is('array');
+	return _getContent(context, value(...args), parts);
+}
+
 /** Recursively get content */
 function _getContent (context, content, parts) {
 	debug.assert(parts).is('array');
@@ -49,12 +57,7 @@ function _getContent (context, content, parts) {
 	if (is.function(value)) {
 		const method = context.method;
 		if (method === 'post') {
-			return context.$getBody().then(body => {
-				body = _parseJson(body);
-				const args = (body && body.$args) || [];
-				debug.assert(args).is('array');
-				return _getContent(context, content[part](...args), parts);
-			});
+			return context.$getBody().then(body => _getContentFunctionCall(context, value, parts, body) );
 		} else if (method === 'get') {
 			return _getContent(context, content[part], parts);
 		} else {
@@ -65,42 +68,43 @@ function _getContent (context, content, parts) {
 	}
 }
 
+function __serviceRequestParseSubContent (context, subContent) {
+	if (subContent !== undefined) {
+		return prepareResponse(context, subContent);
+	} else {
+		return prepareErrorResponse(context, 404, 'Not Found');
+	}
+}
+
+function ___serviceRequestHandler (content, req) {
+	const context = createContext(req);
+	const parts = _splitURL(context.url);
+	return Q.when(_getContent(context, content, parts)).then(
+		subContent => __serviceRequestParseSubContent(context, subContent)
+	);
+}
+
 /** */
-function _serviceRequestHandler (content, req) {
-	return Q.fcall(() => {
+function __serviceRequestHandler (serviceInstance, req) {
+	if (is.array(serviceInstance)) {
+		serviceInstance = _.first(serviceInstance);
+	}
+	debug.assert(serviceInstance).is('defined');
+	return Q.fcall( () => ___serviceRequestHandler(serviceInstance, req));
+}
 
-		const context = createContext(req);
-		//debug.log('Created context: ', context);
-
-		//console.log(new Date() + ' | ' + context.remoteAddress +' | ' + context.commonName +' | ' + context.method +' | ' + context.url);
-
-		const parts = _splitURL(context.url);
-
-		return Q.when(_getContent(context, content, parts)).then(subContent => {
-			if (subContent !== undefined) {
-				return prepareResponse(context, subContent);
-			} else {
-				return prepareErrorResponse(context, 404, 'Not Found');
-			}
-		});
-
-	});
+/** */
+function _serviceRequestHandler (serviceName, getInstance, req) {
+	return Q.when(getInstance(serviceName)).then(
+		serviceInstance => __serviceRequestHandler(serviceInstance, req)
+	);
 }
 
 /** Build a HTTP(s) request handler for a MicroService */
 function serviceRequestHandler (serviceName, getInstance) {
 	debug.assert(serviceName).is('string');
 	debug.assert(getInstance).is('function');
-	return (req, res) => {
-		//debug.log('serviceName = ', serviceName);
-		return Q.when(getInstance(serviceName)).then(serviceInstance => {
-			if (is.array(serviceInstance)) {
-				serviceInstance = _.first(serviceInstance);
-			}
-			debug.assert(serviceInstance).is('object');
-			return Q.when(_serviceRequestHandler(serviceInstance, req));
-		});
-	};
+	return req => _serviceRequestHandler(serviceName, getInstance, req);
 }
 
 export default serviceRequestHandler;

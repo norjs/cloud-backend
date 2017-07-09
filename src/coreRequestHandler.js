@@ -25,12 +25,82 @@ const NS_PER_SEC = 1e9;
 function reply (context, res, body, status=200) {
 	debug.assert(status).is('number');
 	res.writeHead(status);
-	res.end( jsonReply(body) );
 
+	const method = context.method.toUpperCase();
+	if (method === 'HEAD') {
+		res.end();
+	} else {
+		res.end( jsonReply(body) );
+	}
+
+	// Logging
+	let diff;
+	const hrtime = context.$getTime();
+	//debug.log('hrtime = ', hrtime);
+	let time;
+	if (hrtime) {
+		diff = process.hrtime(hrtime);
+		time = (diff[0] * NS_PER_SEC + diff[1]) / 1000000;
+	}
 	const identity = context.$getIdentity();
-	const diff = process.hrtime(context.$hrtime);
-	const time = (diff[0] * NS_PER_SEC + diff[1]) / 1000000;
-	console.log(moment().format() + ' [' + (identity ? identity + '@' : '') + context.remoteAddress+'] ' + context.method.toUpperCase() + ' ' + status + ' ' + context.url + ' ['+time+']');
+	console.log(moment().format() + ' [' + (identity ? identity + '@' : '') + context.remoteAddress+'] ' + method + ' ' + status + ' ' + context.url + ' ['+time+']');
+}
+
+/** */
+function _coreRequestResponseHandler (req, res, body) {
+	//console.log('body = ', body);
+
+	const context = createContext(req);
+
+	const type = body && body.$type || '';
+	const isError = type === 'error';
+	const statusCode = _.get(body, '$statusCode') || 200;
+
+	if ( (!isError) && (statusCode >= 200) && (statusCode < 300) ) {
+		const hash = body && body.$hash || '';
+		const ifNoneMatch = req.headers['if-none-match'] || '';
+		//debug.log('headers = "' + Object.keys(req.headers) + '"');
+		//debug.log('ifNoneMatch = "' + ifNoneMatch + '"');
+
+		if (ifNoneMatch && hash && (ifNoneMatch === hash)) {
+			return reply(context, res, {}, 304); // Not Modified
+		}
+
+		if (hash) {
+			res.setHeader('Cache-Control', 'private, max-age=31557600');
+			res.setHeader("ETag", hash);
+		}
+	}
+
+	return reply(context, res, body, statusCode);
+}
+
+/** */
+function _coreRequestHandlerWithoutErrorHandling (req, res, next) {
+	return Q.when(next(req, res)).then(body => _coreRequestResponseHandler(req, res, body));
+}
+
+function unexpectedErrorHandler (err) {
+	debug.error('Unexpected error while handling error:', err);
+}
+
+function _standardErrorHandler (err, context, res) {
+
+	if (err instanceof HTTPError) {
+		return reply(context, res, prepareErrorResponse(context, err.code, err.message, err), err.code);
+	}
+
+	debug.error('Error: ', err);
+	const code = 500;
+	const error = "Internal Service Error";
+	return reply(context, res, prepareErrorResponse(context, code, error, err), code);
+}
+
+function _coreRequestHandler (req, res, next) {
+	const hrtime = process.hrtime();
+	const context = createContext(req);
+	context.$setTime(hrtime);
+	return Q.fcall(() => _coreRequestHandlerWithoutErrorHandling(req, res, next)).fail(err => _standardErrorHandler(err, context, res)).fail(unexpectedErrorHandler);
 }
 
 /** Build a HTTP(s) request handler. This handler handles the core functionality; exception handling, etc.
@@ -38,50 +108,5 @@ function reply (context, res, body, status=200) {
  * @returns {Function} A Function which takes (req, res) arguments, handles exceptions, and forwards anything else to `next`.
  */
 export default function coreRequestHandler (next) {
-	return (req, res) => {
-		const $hrtime = process.hrtime();
-		return Q.fcall(() => {
-			return Q.when(next(req, res)).then(body => {
-				//console.log('body = ', body);
-
-				const context = createContext(req);
-
-				context.$hrtime = $hrtime;
-
-				const type = body && body.$type || '';
-				const hash = body && body.$hash || '';
-				const isError = type === 'error';
-				const statusCode = _.get(body, '$statusCode') || 200;
-
-				if (!isError) {
-					const ifNoneMatch = req.headers['if-none-match'] || '';
-					//debug.log('headers = "' + Object.keys(req.headers) + '"');
-					//debug.log('ifNoneMatch = "' + ifNoneMatch + '"');
-
-					if (ifNoneMatch && hash && (ifNoneMatch === hash)) {
-						return reply(context, res, {}, 304); // Not Modified
-					}
-
-					if (hash) {
-						res.setHeader('Cache-Control', 'private, max-age=31557600');
-						res.setHeader("ETag", hash);
-					}
-				}
-
-				return reply(context, res, body, statusCode);
-			});
-		}).fail(err => {
-			const context = createContext(req);
-			if (err instanceof HTTPError) {
-				return reply(context, res, prepareErrorResponse(context, err.code, err.message, err), err.code);
-			}
-
-			debug.error('Error: ', err);
-			const code = 500;
-			const error = "Internal Service Error";
-			return reply(context, res, prepareErrorResponse(context, code, error, err), code);
-		}).fail(err => {
-			debug.error('Unexpected error while handling error:', err);
-		});
-	};
+	return (req, res) => _coreRequestHandler(req, res, next);
 }
