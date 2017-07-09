@@ -11,6 +11,7 @@ import { getAllKeys } from './helpers.js';
 import { notPrivate } from './helpers.js';
 import { getConstructors } from './helpers.js';
 import { notFunction } from './helpers.js';
+import { parseFunctionArgumentNames } from './helpers.js';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = !isProduction;
@@ -25,22 +26,32 @@ export function prepareObjectPrototypeResponse (context, content) {
 	//debug.log("members = ", members);
 	//debug.log("properties = ", properties);
 
+	const $constructor = _.get(content, 'constructor');
 	const $name = _.get(content, 'constructor.name');
+
+	let constructors = getConstructors(content);
+	if (constructors) {
+		if (!is.array(constructors)) {
+			constructors = [constructors];
+		}
+		if (_.last(constructors) === 'Object') {
+			constructors.length -= 1;
+		}
+	} else {
+		constructors = [];
+	}
 
 	let body = {
 		$id: null,
 		$hash: null,
 		$ref: context.$ref(),
 		$name,
-		$type: [$name].concat(getConstructors(content))
+		$type: [$name].concat(constructors),
+		$args: parseFunctionArgumentNames($constructor)
 	};
 
 	_.forEach(methods, method => {
-		body[method] = {
-			$type: 'Function',
-			$method: 'post',
-			$ref: context.$ref(method)
-		};
+		body[method] = prepareFunctionResponse(context, content[method], context.$ref(method));
 	});
 
 	let id, hash;
@@ -78,11 +89,7 @@ export function prepareObjectResponse (context, content) {
 	});
 
 	_.forEach(methods, method => {
-		body[method] = {
-			$type: 'Function',
-			$method: 'post',
-			$ref: context.$ref(method)
-		};
+		body[method] = prepareFunctionResponse(context, content[method], context.$ref(method));
 	});
 
 	let id, hash;
@@ -101,28 +108,41 @@ export function prepareObjectResponse (context, content) {
 }
 
 /** */
-export function prepareScalarResponse (context, content) {
-	//debug.log("content = ", content);
+export function prepareFunctionResponse (context, f, ref) {
+	debug.assert(context).is('object');
+	debug.assert(f).is('function');
+
 	let body = {
+		$ref: ref || context.$ref(),
+		$type: 'Function',
+		$method: 'post',
+		$args: parseFunctionArgumentNames(f)
+	};
+
+	getAllKeys(f).filter(notPrivate).filter(key => {
+		if(key === 'arguments') return false;
+		if(key === 'caller') return false;
+		return true;
+	}).filter(key => notFunction(f[key])).forEach(key => {
+		body[key] = f[key];
+	});
+
+	return body;
+}
+
+/** */
+export function prepareScalarResponse (context, content) {
+
+	if (is.function(content)) {
+		return prepareFunctionResponse(context, content);
+	}
+
+	return {
 		$ref: context.$ref(),
 		$path: 'payload',
 		$type: getConstructors(content),
 		payload: content
 	};
-
-	if (is.function(content)) {
-		delete body.$path;
-		body.$method = 'post';
-		getAllKeys(content).filter(notPrivate).filter(key => {
-			if(key === 'arguments') return false;
-			if(key === 'caller') return false;
-			return true;
-		}).filter(key => notFunction(content[key])).forEach(key => {
-			body[key] = content[key];
-		});
-	}
-
-	return body;
 }
 
 /** */

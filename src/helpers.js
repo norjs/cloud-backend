@@ -1,5 +1,6 @@
 
 import _ from 'lodash';
+import debug from 'nor-debug';
 import is from 'nor-is';
 
 const reservedPropertyNames = [
@@ -58,4 +59,29 @@ export function getConstructors (obj) {
 	}
 
 	return r;
+}
+
+const STRIP_COMMENTS = /(\/\/.*$)|(\/\*[\s\S]*?\*\/)/mg;
+const STRIP_PARAMS = /(\s*=[^,]*(('(?:\\'|[^'\r\n])*')|("(?:\\"|[^"\r\n])*"))|(\s*=[^,]*))/mg;
+const ARGUMENT_NAMES = /([^\s,]+)/g;
+
+/** Parse function argument names */
+export function parseFunctionArgumentNames (f) {
+	debug.assert(f).is('function');
+
+	let str = f.toString().replace(STRIP_COMMENTS, '');
+
+	if (str.substr(0, 'class '.length) === 'class ') {
+		str = str.substr(str.indexOf('{')+1);
+		debug.log('str = ', str);
+	}
+
+	str = str.substr(str.indexOf('(')+1);
+	str = str.substr(0, str.lastIndexOf(')', str.indexOf('{')));
+	str = str.replace(STRIP_PARAMS, '');
+
+	const result = str.match(ARGUMENT_NAMES);
+
+	if (!is.array(result)) return [];
+	return result;
 }
