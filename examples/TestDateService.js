@@ -4,7 +4,6 @@ export default class TestDateService {
 		this._Date = DateService;
 	}
 
-	/** Returns current date */
 	updateDate () {
 		return this._Date.updateDate();
 	}

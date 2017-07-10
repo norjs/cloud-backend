@@ -1,10 +1,9 @@
 export default class DateService {
 
 	constructor () {
-
+		this.date = new Date();
 	}
 
-	/** Saves current date */
 	updateDate () {
 		this.date = new Date();
 	}

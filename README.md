@@ -22,7 +22,10 @@ First we'll create a test service which saves a time when `.updateDate()` is tri
 ```javascript
 export default class DateService {
 
-	/** Returns current date */
+	constructor () {
+		this.date = new Date();
+	}
+
 	updateDate () {
 		this.date = new Date();
 	}
@@ -42,7 +45,6 @@ export default class TestDateService {
 		this._Date = DateService;
 	}
 
-	/** Returns current date */
 	updateDate () {
 		return this._Date.updateDate();
 	}
