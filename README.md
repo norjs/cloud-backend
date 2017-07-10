@@ -12,7 +12,8 @@ it.
 
 ### Tutorial
 
-***Note!*** This example assumes you are familiar with babel-cli and use it to convert your ES6 files.
+***Note!*** This example assumes you are familiar with babel-cli and use it to convert your ES6 files. You can compile 
+our examples with `npm run compile-examples`.
 
 We'll start two different systems in this example which talk to each other. We'll run them on the same local machine, 
 but they could be anywhere in the network.
