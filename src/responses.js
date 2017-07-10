@@ -170,6 +170,16 @@ export function prepareScalarResponse (context, content) {
 		return prepareFunctionResponse(context, content);
 	}
 
+	// FIXME: Implement better way to transfer undefined!
+	if (content === 'undefined') {
+		return {
+			$ref: context.$ref(),
+			$path: 'payload',
+			$type: 'undefined',
+			payload: undefined
+		};
+	}
+
 	return {
 		$ref: context.$ref(),
 		$path: 'payload',
