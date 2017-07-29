@@ -31,13 +31,13 @@ function _parseJson (body) {
 /** */
 function _getContentFunctionCall (context, content, part, parts, body) {
 	body = _parseJson(body);
-	debug.log('body = ', body);
+	//debug.log('body = ', body);
 	const args = (body && body.$args) || [];
 	debug.assert(args).is('array');
-	debug.log('args = ', args);
+	//debug.log('args = ', args);
 	return Q.when(content[part](...args)).then(reply => {
-		debug.log('reply = ', reply);
-		debug.log('parts = ', parts);
+		//debug.log('reply = ', reply);
+		//debug.log('parts = ', parts);
 
 		// FIXME: Implement better way to transfer undefined!
 		if (reply === undefined) {
@@ -54,7 +54,7 @@ function _getContent (context, content, parts) {
 
 	//debug.log('content =', content);
 
-	debug.log('_getContent(', content, ', ', parts, ')');
+	//debug.log('_getContent(', content, ', ', parts, ')');
 
 	if (parts.length === 0) {
 		//debug.log('content =', content);
@@ -62,23 +62,23 @@ function _getContent (context, content, parts) {
 	}
 
 	const part = parts.shift();
-	debug.log('part =', part);
+	//debug.log('part =', part);
 
 	if (isPrivate(part)) {
-		debug.log('part is private');
+		//debug.log('part is private');
 		return;
 	}
 
 	debug.assert(content).is('object');
-	debug.log('content = ', content);
-	debug.log('content['+part+'] =', content[part]);
+	//debug.log('content = ', content);
+	//debug.log('content['+part+'] =', content[part]);
 
 	if (is.function(content[part])) {
 		const method = context.method;
-		debug.log('method = ', method);
+		//debug.log('method = ', method);
 
 		if (method === 'post') {
-			debug.log('Calling ', part);
+			//debug.log('Calling ', part);
 			return context.$getBody().then(body => _getContentFunctionCall(context, content, part, parts, body) );
 		}
 
@@ -89,7 +89,7 @@ function _getContent (context, content, parts) {
 		throw new HTTPError(405);
 
 	} else {
-		debug.log('content['+part+'] not function');
+		//debug.log('content['+part+'] not function');
 		return _getContent(context, content[part], parts);
 	}
 }

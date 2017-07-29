@@ -1,6 +1,6 @@
 {
   "name": "@sendanor/cloud-backend",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Sendanor's Cloud Backend",
   "main": "dist/index.js",
   "bin": {

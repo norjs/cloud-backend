@@ -117,7 +117,7 @@ function _coreRequestHandler (req, res, next) {
 	// Enable CORS
 	res.setHeader('Access-Control-Allow-Origin', '*');
 	res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-	res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+	res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,prefer,if-none-match');
 	res.setHeader('Access-Control-Allow-Credentials', true);
 
 	return Q.fcall(() => _coreRequestHandlerWithoutErrorHandling(req, res, next)).fail(err => _standardErrorHandler(err, context, res)).fail(unexpectedErrorHandler);
