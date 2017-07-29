@@ -23,7 +23,6 @@ function jsonReply (content) {
 	return JSON.stringify(content, null, 2) + "\n";
 }
 
-
 /** Send a response */
 function reply (context, res, body, status=200) {
 	debug.assert(status).is('number');
@@ -49,7 +48,6 @@ function setTimeoutPromise (f, time) {
 /** */
 function _coreRequestResponseHandler (req, res, body, next) {
 	//console.log('body = ', body);
-
 	const context = createContext(req);
 
 	const type = body && body.$type || '';
@@ -115,6 +113,13 @@ function _coreRequestHandler (req, res, next) {
 	const hrtime = process.hrtime();
 	const context = createContext(req);
 	context.$setTime(hrtime);
+
+	// Enable CORS
+	res.setHeader('Access-Control-Allow-Origin', '*');
+	res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+	res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+	res.setHeader('Access-Control-Allow-Credentials', true);
+
 	return Q.fcall(() => _coreRequestHandlerWithoutErrorHandling(req, res, next)).fail(err => _standardErrorHandler(err, context, res)).fail(unexpectedErrorHandler);
 }
 
