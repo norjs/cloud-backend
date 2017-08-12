@@ -86,6 +86,10 @@ function _getContent (context, content, parts) {
 			return _getContent(context, content[part], parts);
 		}
 
+		if (method === 'options') {
+			return _getContent(context, content[part], parts);
+		}
+
 		throw new HTTPError(405);
 
 	} else {
@@ -122,18 +126,27 @@ function __serviceRequestHandler (serviceInstance, req) {
 	return Q.fcall( () => ___serviceRequestHandler(serviceInstance, req));
 }
 
-/** */
+/**
+ * @param serviceName {String}
+ * @param getInstance {Function}
+ * @param req {Object}
+ * @returns {Promise}
+ */
 function _serviceRequestHandler (serviceName, getInstance, req) {
 	return Q.when(getInstance(serviceName)).then(
 		serviceInstance => __serviceRequestHandler(serviceInstance, req)
 	);
 }
 
-/** Build a HTTP(s) request handler for a MicroService */
+/** Build a HTTP(s) request handler for a MicroService
+ * @param serviceName {String}
+ * @param getInstance {Function}
+ * @returns {Function}
+ */
 function serviceRequestHandler (serviceName, getInstance) {
 	debug.assert(serviceName).is('string');
 	debug.assert(getInstance).is('function');
-	return req => _serviceRequestHandler(serviceName, getInstance, req);
+	return (req, res, next) => _serviceRequestHandler(serviceName, getInstance, req);
 }
 
 export default serviceRequestHandler;

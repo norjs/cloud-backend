@@ -29,7 +29,7 @@ function reply (context, res, body, status=200) {
 	res.writeHead(status);
 
 	const method = context.method.toUpperCase();
-	if ((!body) || (method === 'HEAD')) {
+	if ((!body) || (method === 'HEAD') || (meth)) {
 		res.end();
 	} else {
 		res.end( jsonReply(body) );
@@ -109,7 +109,18 @@ function _standardErrorHandler (err, context, res) {
 	return reply(context, res, prepareErrorResponse(context, code, error, err), code);
 }
 
-function _coreRequestHandler (req, res, next) {
+/** Build a HTTP(s) request handler. This handler handles the core functionality; exception handling, etc.
+ * @param req {Object} Node.js request object
+ * @param res {Object} Node.js response object
+ * @param next {Function} A callback to tell if we should move to next middleware
+ * @returns {Promise}
+ */
+export default function coreRequestHandler (req, res, next) {
+
+	debug.assert(req).is('object');
+	debug.assert(res).is('object');
+	debug.assert(next).is('function');
+
 	const hrtime = process.hrtime();
 	const context = createContext(req);
 	context.$setTime(hrtime);
@@ -121,12 +132,4 @@ function _coreRequestHandler (req, res, next) {
 	res.setHeader('Access-Control-Allow-Credentials', true);
 
 	return Q.fcall(() => _coreRequestHandlerWithoutErrorHandling(req, res, next)).fail(err => _standardErrorHandler(err, context, res)).fail(unexpectedErrorHandler);
-}
-
-/** Build a HTTP(s) request handler. This handler handles the core functionality; exception handling, etc.
- * @param next {Function} The application request handler, which might throw exceptions and returns promises.
- * @returns {Function} A Function which takes (req, res) arguments, handles exceptions, and forwards anything else to `next`.
- */
-export default function coreRequestHandler (next) {
-	return (req, res) => _coreRequestHandler(req, res, next);
 }

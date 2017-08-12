@@ -10,12 +10,12 @@ import debug from 'nor-debug';
 import Q from 'q';
 import fs from 'fs';
 import moment from 'moment';
-import ServiceCache from './ServiceCache.js';
+
 import getServiceByName from './getServiceByName.js';
-import serviceRequestHandler from './serviceRequestHandler';
-import coreRequestHandler from './coreRequestHandler.js';
-import createServer from './createServer.js';
-import basicAuthRequestHandler from './basicAuthRequestHandler.js';
+
+import {MainService} from './services';
+import {ServiceCache} from './services';
+import builtInServices from './services';
 
 const argv = minimist(process.argv.slice(2));
 
@@ -96,98 +96,30 @@ if (argv._.length === 0) {
 
 	const servicePaths = argv._;
 
-	const serviceCache = new ServiceCache();
-
-	let firstServiceUUID;
-
-	//config.serviceCache = serviceCache;
+	const userServices = _.map(servicePaths, servicePath => {
+		debug.assert(servicePath).is('string');
+		return getServiceByName(servicePath);
+	});
 
 	if ( (config.protocol === 'https') && ((!config.ca) || (!config.cert) || (!config.key)) ) {
 		console.log(usage);
 	} else {
-		Q.fcall(() => {
 
-			return Q.fcall( () => {
-				return serviceCache.register(serviceCache).then(() => {
-					return Q.all(_.map(servicePaths, servicePath => {
-						debug.assert(servicePath).is('string');
-						return getServiceByName(servicePath).then(Service => {
-							debug.assert(Service).is('defined');
-							return serviceCache.register(Service).then(uuid => {
-								if (!firstServiceUUID) {
-									firstServiceUUID = uuid;
-								}
-								return uuid;
-							});
-						});
-					})).then(() => {
-						console.log(moment().format() + ' [main] All services started.');
-					});
-				});
-			}).fail(err => {
-				debug.error('Failed to start some services: ' + ((err && err.message) || ''+err) );
-				return Q.reject(err);
-			});
+		const $main = new MainService();
 
-		}).then(() => {
-
-			return serviceCache.getUUIDs().then(uuids => Q.all(_.map(uuids, uuid => {
-				return serviceCache.get(uuid).then(instance => {
-					if (instance && is.function(instance.$onInit)) {
-						return instance.$onInit();
-					}
-				});
-			}))).then(() => {
-				console.log(moment().format() + ' [main] All services initialized.');
-			}).fail(err => {
-				debug.error('Failed to initialize some services: ' + ((err && err.message) || ''+err));
-				return Q.reject(err);
-			});
-
-		}).then(() => {
-
-			if (!_.has(config, 'listen')) {
-				return;
-			}
-
-			debug.assert(config.protocol).ignore(undefined).is('string');
-			debug.assert(config.port).ignore(undefined).is('integer');
-
-			debug.assert(config.ca).ignore(undefined).is('string');
-			debug.assert(config.key).ignore(undefined).is('string');
-			debug.assert(config.cert).ignore(undefined).is('string');
-
-			let serviceName = config.listen;
-			if (!serviceName) {
-				serviceName = firstServiceUUID;
-			}
-
-			let requestHandler = serviceRequestHandler(serviceName,
-				name => serviceCache.get(name)
-			);
-			debug.assert(requestHandler).is('function');
-
-			// Enable optional auth supports
-			if (config.auth && config.auth.basic) {
-				console.log(moment().format() + ' [main] Basic auth support enabled.');
-				requestHandler = basicAuthRequestHandler(requestHandler, config.auth.basic);
-			}
-
-			// Wrap around coreRequestHandler for error handling, etc.
-			requestHandler = coreRequestHandler(requestHandler);
-
-			return createServer(config, requestHandler).then(() => {
-				let name = serviceName;
-				if (is.uuid(name)) {
-					return serviceCache.getNameById(name).then(name_ => {
-						console.log(moment().format() + ' [main] Service ' + name_ + ' started at port ' + (config.port||3000) + ' as ' + (config.protocol||'https') );
-					});
-				}
-				console.log(moment().format() + ' [main] Service ' + name + ' started at port ' + (config.port||3000) + ' as ' + (config.protocol||'https') );
-			});
-
-		}).fail(err => {
-			debug.error('Exception: ', err);
+		$main.setServiceCache(ServiceCache)
+		 .setBuiltInServices(builtInServices)
+		 .setUserServices(userServices)
+		 .loadServices().then(
+			m => m.configServices(config)
+		).then(
+			m => m.initServices()
+		).then(
+			m => m.runServices()
+		).fail(err => {
+			const log = $main.getLog();
+			const f = log && is.function(log.error) ? log.error : debug.error;
+			f('Exception: ', err);
 		}).done();
 	}
 

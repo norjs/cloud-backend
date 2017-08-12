@@ -5,41 +5,28 @@ import { HTTPError } from "nor-errors";
 
 /** Sets WWW-Authenticate and throws 401 HTTP Error */
 function _notOk (req, res) {
-	res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+	res.setHeader('WWW-Authenticate', 'Bearer realm="Secure Area"');
 	throw new HTTPError(401);
 }
 
 /** */
-function _basicAuthRequestHandler (req, res, next, config) {
+function _bearerAuthRequestHandler (req, res, next, config) {
 	debug.assert(config).is('object');
 	debug.assert(config.credentials).is('array');
 	debug.assert(next).is('function');
 
-	if (req && _.toLower(req.method) === 'options') {
-		res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
-		return;
-	}
-
-	const authorization = _.get(req, 'headers.authorization');
+	const authorization = _.trim(_.get(req, 'headers.authorization'));
 	if (!authorization) return _notOk(req, res);
 	debug.assert(authorization).is('string');
 
-	if (authorization.substr(0, 'Basic '.length).toLowerCase() !== 'basic ') {
+	if (authorization.substr(0, 'Bearer '.length).toLowerCase() !== 'bearer ') {
 		throw new TypeError("Not supported authorization type: " + authorization.split(' ')[0]);
 	}
 
-	const auth = (new Buffer(authorization.substr('Basic '.length), 'base64')).toString();
-	debug.assert(auth).is('string');
+	const accessToken = _.trim(authorization.substr('Bearer '.length));
+	debug.assert(accessToken).is('string');
+	debug.log('accessToken = ', accessToken);
 
-	//console.log('Parsed: "' +auth + '"');
-
-	const authSplitted = auth.split(':');
-	const username = authSplitted.shift();
-	const password = authSplitted.join(':');
-	debug.assert(username).is('string');
-	debug.assert(password).is('string');
-
-	//debug.log('unverifiedUser = ', username);
 	req.unverifiedUser = username;
 	//debug.log('unverifiedUser = ', req.unverifiedUser);
 
@@ -69,7 +56,7 @@ function _basicAuthRequestHandler (req, res, next, config) {
 	return next(req, res);
 }
 
-/** HTTP Basic Authentication Support */
-export default function basicAuthRequestHandler (config) {
-	return (req, res, next) => _basicAuthRequestHandler(req, res, next, config);
+/** HTTP Bearer Authentication Support */
+export default function bearerAuthRequestHandler (next, config) {
+	return (req, res) => _bearerAuthRequestHandler(req, res, next, config);
 }
