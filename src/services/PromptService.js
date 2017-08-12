@@ -5,6 +5,7 @@ import debug from 'nor-debug';
 import readline from 'readline';
 import { getAllKeys } from '../helpers.js';
 import { notPrivate } from '../helpers.js';
+import parsePrompt from '../lib/parsePrompt.js';
 
 /** This service implements a command line interface into cloud-backend */
 export default class PromptService {
@@ -95,10 +96,15 @@ export default class PromptService {
 	 */
 	_onLine (line) {
 		return Q.fcall( () => {
-			const argv = _.split(line, " ").map(word => _.trim(word));
 
-			const command = argv.shift();
+			const command = _.split(line, ' ').shift() || '';
 			if (!command) return; // Ignore empty commands
+
+			line = line.substr(command.length + 1);
+
+			command = _.trim(command);
+
+			const argv = parsePrompt(line);
 
 			// Unknown commands
 			if (this._commands.indexOf(command) < 0) {
