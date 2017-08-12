@@ -2,7 +2,7 @@
 import GenericParser from './GenericParser.js';
 
 /** Parser for our prompt arguments, which are mostly JSON including few custom formats */
-class PromptParser extends GenericParser {
+export default class PromptParser extends GenericParser {
 
 	/** Construct a parser context
 	 * @param line {string}
