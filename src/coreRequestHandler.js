@@ -29,7 +29,7 @@ function reply (context, res, body, status=200) {
 	res.writeHead(status);
 
 	const method = context.method.toUpperCase();
-	if ((!body) || (method === 'HEAD') || (meth)) {
+	if ((!body) || (method === 'HEAD')) {
 		res.end();
 	} else {
 		res.end( jsonReply(body) );
