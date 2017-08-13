@@ -97,14 +97,10 @@ export default class PromptService {
 	_onLine (line) {
 		return Q.fcall( () => {
 
-			const command = _.split(line, ' ').shift() || '';
-			if (!command) return; // Ignore empty commands
-
-			line = line.substr(command.length + 1);
-
-			command = _.trim(command);
-
 			const argv = parsePrompt(line);
+
+			const command = argv.shift() || '';
+			if (!command) return; // Ignore empty commands
 
 			// Unknown commands
 			if (this._commands.indexOf(command) < 0) {
@@ -261,7 +257,10 @@ export default class PromptService {
 
 	/** Sample command */
 	onEcho (...args) {
-		console.log( args.join(', ') )
+		console.log( args.map(arg => {
+			if (arg === undefined) return 'undefined';
+			return JSON.stringify(arg);
+		}).join(', ') );
 	}
 
 	/** List all available contexts */
