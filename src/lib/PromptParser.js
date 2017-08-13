@@ -78,6 +78,8 @@ export default class PromptParser extends GenericParser {
 	parseNull () {
 		//debug.log('.parseNull()');
 		this.eatWhite().eatString('null');
+		if ( (!this.isEmpty()) && (!this.startsWithWhite()) ) this.throwParseError();
+		this.eatWhite();
 		return null;
 	}
 
@@ -85,6 +87,8 @@ export default class PromptParser extends GenericParser {
 	parseUndefined () {
 		//debug.log('.parseUndefined()');
 		this.eatWhite().eatString('undefined');
+		if ( (!this.isEmpty()) && (!this.startsWithWhite()) ) this.throwParseError();
+		this.eatWhite();
 		return;
 	}
 
@@ -94,6 +98,8 @@ export default class PromptParser extends GenericParser {
 	parseTrue () {
 		//debug.log('.parseTrue()');
 		this.eatWhite().eatString('true');
+		if ( (!this.isEmpty()) && (!this.startsWithWhite()) ) this.throwParseError();
+		this.eatWhite();
 		return true;
 	}
 
@@ -103,28 +109,9 @@ export default class PromptParser extends GenericParser {
 	parseFalse () {
 		//debug.log('.parseFalse()');
 		this.eatWhite().eatString('false');
-		return false;
-	}
-
-	/** Parse next value
-	 * @returns {Any}
-	 */
-	parseValue () {
-		//debug.log('.parseValue()');
+		if ( (!this.isEmpty()) && (!this.startsWithWhite()) ) this.throwParseError();
 		this.eatWhite();
-
-		if (this.startsWith('{')) return this.parseObject();
-		if (this.startsWith('[')) return this.parseArray();
-		if (this.startsWith('"')) return this.parseString();
-		if (this.startsWith("'")) return this.parseString();
-		if (this.startsWith("-")) return this.parseNumber();
-		if (this.startsWithDigit()) return this.parseNumber();
-		if (this.startsWith('true')) return this.parseTrue();
-		if (this.startsWith('false')) return this.parseFalse();
-		if (this.startsWith('undefined')) return this.parseUndefined();
-		if (this.startsWith('null')) return this.parseNull();
-
-		this.throwParseError();
+		return false;
 	}
 
 	/** Parse next string
@@ -136,6 +123,8 @@ export default class PromptParser extends GenericParser {
 		let ret = "";
 
 		this.eatWhite();
+
+		if (this.isEmpty()) this.throwParseError();
 
 		let quote;
 		if (this.startsWith('"')) quote = '"';
@@ -282,6 +271,27 @@ export default class PromptParser extends GenericParser {
 
 		//debug.log('final tmp =', tmp);
 		return JSON.parse(tmp);
+	}
+
+	/** Parse next value
+	 * @returns {Any}
+	 */
+	parseValue () {
+		//debug.log('.parseValue()');
+		this.eatWhite();
+
+		if (this.startsWith('{')) return this.parseObject();
+		if (this.startsWith('[')) return this.parseArray();
+		if (this.startsWith('"')) return this.parseString();
+		if (this.startsWith("'")) return this.parseString();
+		if (this.startsWith("-")) return this.parseNumber();
+		if (this.startsWithDigit()) return this.parseNumber();
+		if (this.startsWith('true')) return this.parseTrue();
+		if (this.startsWith('false')) return this.parseFalse();
+		if (this.startsWith('undefined')) return this.parseUndefined();
+		if (this.startsWith('null')) return this.parseNull();
+
+		this.throwParseError();
 	}
 
 	/** Parse multiple values into an array

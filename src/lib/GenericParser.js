@@ -60,6 +60,14 @@ export default class GenericParser {
 		return this._line.length && '0123456789'.indexOf(this._line[0]) >= 0;
 	}
 
+	/** Returns true if starts with a white space
+	 * @param target {string}
+	 * @returns {boolean}
+	 */
+	startsWithWhite () {
+		return this._line.length && ' \f\n\r\t\v'.indexOf(this._line[0]) >= 0;
+	}
+
 	/** Throw a parse error */
 	throwParseError () {
 		throw new TypeError("Failed to parse at " + this._line.substr(0, 50) );
