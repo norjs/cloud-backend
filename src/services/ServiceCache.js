@@ -4,8 +4,11 @@ import is from 'nor-is';
 import debug from 'nor-debug';
 import uuidv4 from 'uuid/v4';
 import moment from 'moment';
-import EventEmitter from 'events';
+import events from 'events';
 import { parseFunctionArgumentNames } from '../helpers.js';
+
+// Older Node.js has EventEmitter as events.EventEmitter, not same as events
+const EventEmitter = events.EventEmitter;
 
 function __matchName (serviceName, s) {
 	return s && (s.name === serviceName);
