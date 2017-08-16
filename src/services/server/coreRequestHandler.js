@@ -1,6 +1,6 @@
 
 import _ from 'lodash';
-//import is from 'nor-is';
+import is from 'nor-is';
 import Q from 'q';
 import debug from 'nor-debug';
 //import ref from 'nor-ref';
@@ -19,12 +19,50 @@ const NS_PER_SEC = 1e9;
 const longPollingWatchDelay = parseInt(process.env.CLOUD_CLIENT_LONG_POLLING_SERVER_WATCH_DELAY || 500, 10); // ms
 
 /** Send a reply in JSON format */
+function jsonReply2 (content, counter) {
+	try {
+		return JSON.stringify(content, null, 2) + "\n";
+	} catch (err) {
+
+		if (! (err && err.message && err.message.indexOf('Converting circular structure to JSON') >= 0) ) {
+			throw err;
+		}
+
+		counter += 1;
+		if (counter >= 2) {
+			return '"Stringify Error: Circular structure detected"';
+		}
+
+		return '{' + _.map( Object.keys(content), key => '"' + key + '": ' + jsonReply2(content[key], counter) ).join(', ') + '}';
+	}
+}
+
+/** Send a reply in JSON format */
 function jsonReply (content) {
-	return JSON.stringify(content, null, 2) + "\n";
+	try {
+		return JSON.stringify(content, null, 2) + "\n";
+	} catch (err) {
+
+		if (! (err && err.message && err.message.indexOf('Converting circular structure to JSON') >= 0) ) {
+			throw err;
+		}
+
+		if (!is.object(content)) {
+			throw err;
+		}
+
+		return '{' + _.map( Object.keys(content), key => '"' + key + '": ' + jsonReply2(content[key], 0) ).join(', ') + '}';
+	}
 }
 
 /** Send a response */
 function reply (context, res, body, status=200) {
+	//debug.assert(req).is('object');
+	//debug.assert(_.get(req, 'constructor.name')).is('string').equals('IncomingMessage');
+
+	debug.assert(res).is('object');
+	debug.assert(_.get(res, 'constructor.name')).is('string').equals('ServerResponse');
+
 	debug.assert(status).is('number');
 	res.writeHead(status);
 
@@ -47,8 +85,19 @@ function setTimeoutPromise (f, time) {
 
 /** */
 function _coreRequestResponseHandler (req, res, body, next) {
+
+	debug.assert(req).is('object');
+	debug.assert(_.get(req, 'constructor.name')).is('string').equals('IncomingMessage');
+
+	debug.assert(res).is('object');
+	debug.assert(_.get(res, 'constructor.name')).is('string').equals('ServerResponse');
+
 	//console.log('body = ', body);
+	//debug.log('0');
+
 	const context = createContext(req);
+
+	//debug.log('1');
 
 	const type = body && body.$type || '';
 	const isError = type === 'error';
@@ -60,8 +109,8 @@ function _coreRequestResponseHandler (req, res, body, next) {
 		const prefer = preferStr && querystring.parse(preferStr, ';');
 		const preferWait = prefer && prefer.wait ? parseInt(prefer.wait, 10) : undefined;
 		const ifNoneMatch = req.headers['if-none-match'] || '';
-		//debug.log('headers = "' + Object.keys(req.headers) + '"');
-		//debug.log('ifNoneMatch = "' + ifNoneMatch + '"');
+		////debug.log('headers = "' + Object.keys(req.headers) + '"');
+		////debug.log('ifNoneMatch = "' + ifNoneMatch + '"');
 
 		if (ifNoneMatch && hash && (ifNoneMatch === hash)) {
 
@@ -71,10 +120,12 @@ function _coreRequestResponseHandler (req, res, body, next) {
 			if (preferWait) {
 				const time = context.$getTimeDiff();
 				if (time/1000 < preferWait) {
+					//debug.log('2');
 					return setTimeoutPromise(() => _coreRequestHandlerWithoutErrorHandling(req, res, next), longPollingWatchDelay);
 				}
 			}
 
+			//debug.log('3');
 			return reply(context, res, null, $statusCode); // Not Modified
 		}
 
@@ -85,12 +136,20 @@ function _coreRequestResponseHandler (req, res, body, next) {
 
 	}
 
+	//debug.log('4');
 	return reply(context, res, body, statusCode);
 }
 
 /** */
 function _coreRequestHandlerWithoutErrorHandling (req, res, next) {
-	return Q.when(next(req, res)).then(body => _coreRequestResponseHandler(req, res, body, next));
+
+	debug.assert(req).is('object');
+	debug.assert(_.get(req, 'constructor.name')).is('string').equals('IncomingMessage');
+
+	debug.assert(res).is('object');
+	debug.assert(_.get(res, 'constructor.name')).is('string').equals('ServerResponse');
+
+	return Q.fcall( () => next() ).then(body => _coreRequestResponseHandler(req, res, body, next));
 }
 
 function unexpectedErrorHandler (err) {
@@ -104,6 +163,7 @@ function _standardErrorHandler (err, context, res) {
 	}
 
 	debug.error('Error: ', err);
+
 	const code = 500;
 	const error = "Internal Service Error";
 	return reply(context, res, prepareErrorResponse(context, code, error, err), code);
@@ -118,7 +178,9 @@ function _standardErrorHandler (err, context, res) {
 export default function coreRequestHandler (req, res, next) {
 
 	debug.assert(req).is('object');
+	debug.assert(_.get(req, 'constructor.name')).is('string').equals('IncomingMessage');
 	debug.assert(res).is('object');
+	debug.assert(_.get(res, 'constructor.name')).is('string').equals('ServerResponse');
 	debug.assert(next).is('function');
 
 	const hrtime = process.hrtime();
@@ -131,5 +193,10 @@ export default function coreRequestHandler (req, res, next) {
 	res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,prefer,if-none-match');
 	res.setHeader('Access-Control-Allow-Credentials', true);
 
-	return Q.fcall(() => _coreRequestHandlerWithoutErrorHandling(req, res, next)).fail(err => _standardErrorHandler(err, context, res)).fail(unexpectedErrorHandler);
+	return Q.fcall(
+		() => _coreRequestHandlerWithoutErrorHandling(req, res, next)
+	).fail(err => {
+		console.log('err =', JSON.stringify(err));
+		return _standardErrorHandler(err, context, res);
+	}).fail(unexpectedErrorHandler);
 }

@@ -53,7 +53,7 @@ function _bearerAuthRequestHandler (req, res, next, config) {
 	// OK
 
 	req.user = username;
-	return next(req, res);
+	return next();
 }
 
 /** HTTP Bearer Authentication Support */

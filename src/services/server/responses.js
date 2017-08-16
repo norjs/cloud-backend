@@ -206,7 +206,7 @@ function _parseExceptionProperty (key, value) {
 	if (key === 'stack') {
 		return _.split(value, "\n");
 	}
-	return value;
+	return _.cloneDeep(value);
 }
 
 /** */
@@ -223,6 +223,10 @@ export function prepareErrorResponse (context, code, message, exception) {
 		code = exception.code;
 	}
 
+	debug.assert(context).is('object');
+	debug.assert(code).is('number');
+	debug.assert(message).is('string');
+
 	let body = {
 		$type,
 		$ref: context.$ref(),
@@ -232,12 +236,25 @@ export function prepareErrorResponse (context, code, message, exception) {
 	};
 
 	if (isDevelopment && exception) {
+		debug.assert(exception).is('object');
+
 		body.exception = {
 			$type: getConstructors(exception)
 		};
+
 		_.forEach(getAllKeys(exception).filter(notPrivate).filter(notFunction),
 			key => body.exception[key] = _parseExceptionProperty(key, exception[key]) );
 	}
+
+	//debug.log( 'exception: ' , Object.keys(body.exception));
+	//debug.log( 'exception: ' , JSON.stringify(body.exception));
+	//debug.log( 'test: ' , JSON.stringify(body.$type));
+	//debug.log( 'test: ' , JSON.stringify(body.$ref));
+	//debug.log( 'test: ' , JSON.stringify(body.$statusCode));
+	//debug.log( 'test: ' , JSON.stringify(body.code));
+	//debug.log( 'test: ' , JSON.stringify(body.message));
+	//debug.log( 'test exception: ' , JSON.stringify(body.exception));
+	//debug.log( 'test final: ' , JSON.stringify(body));
 
 	return body;
 }

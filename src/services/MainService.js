@@ -90,6 +90,8 @@ export default class MainService {
 			debug.assert(this._builtInServices).is('array');
 			debug.assert(this._userServices).is('array');
 
+			debug.log('this._userServices = ', this._userServices);
+
 			const firstUserService = _.first(this._userServices);
 
 			return this._serviceCache.register([this._serviceCache, this]).then(
@@ -114,10 +116,10 @@ export default class MainService {
 					this._serviceCache.get('LogService').then(logService => this._log = logService)
 					//this._serviceCache.get('RequestService').then(requestService => this._request = requestService)
 				])
-			).then(() => this._infoLog('[main] All services started.'))
+			).then(() => this._infoLog('[main] All services created.'))
 
 		}).fail(
-			err => this._errorLog('Failed to start some services: ' + ((err && err.message) || ''+err) )
+			err => this._errorLog('Failed to create some services: ' + ((err && err.message) || ''+err) )
 		);
 	}
 

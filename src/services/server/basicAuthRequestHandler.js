@@ -66,7 +66,7 @@ function _basicAuthRequestHandler (req, res, next, config) {
 	// OK
 
 	req.user = username;
-	return next(req, res);
+	return next();
 }
 
 /** HTTP Basic Authentication Support */
