@@ -19,6 +19,9 @@ export default class PromptService {
 
 		this._ServiceCache = ServiceCache;
 
+		/** Current custom commands */
+		this._customCommands = {};
+
 		/** {Array.<Object>} Context path */
 		this._contextPath = [ServiceCache];
 
@@ -58,7 +61,6 @@ export default class PromptService {
 			line => Q.when(this._onLine(line)).fail(err => this._onError(err)).then( () => this._runPrompt() ).fail(err => this._onError(err)).done()
 		);
 
-		/** Current custom commands */
 		this._customCommands = {};
 
 		this._updateCommands();
