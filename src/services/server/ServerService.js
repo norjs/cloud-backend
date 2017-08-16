@@ -3,10 +3,10 @@ import _ from 'lodash';
 import is from 'nor-is';
 import debug from 'nor-debug';
 
-import serviceRequestHandler from '../serviceRequestHandler';
-import coreRequestHandler from '../coreRequestHandler.js';
-import createServer from '../createServer.js';
-import basicAuthRequestHandler from '../basicAuthRequestHandler.js';
+import serviceRequestHandler from './serviceRequestHandler';
+import coreRequestHandler from './coreRequestHandler.js';
+import createServer from './createServer.js';
+import basicAuthRequestHandler from './basicAuthRequestHandler.js';
 
 /**  */
 export default class ServerService {
@@ -21,21 +21,20 @@ export default class ServerService {
 	}
 
 	$onConfig (config) {
-
-		debug.assert(config).is('object');
-
-		if (!_.has(config, 'listen')) return;
-
-		debug.assert(config.protocol).ignore(undefined).is('string');
-		debug.assert(config.port).ignore(undefined).is('integer');
-
-		debug.assert(config.ca).ignore(undefined).is('string');
-		debug.assert(config.key).ignore(undefined).is('string');
-		debug.assert(config.cert).ignore(undefined).is('string');
-
-		this._config = config;
-
 		return Q.fcall( () => {
+
+			debug.assert(config).is('object');
+
+			if (!_.has(config, 'listen')) return;
+
+			debug.assert(config.protocol).ignore(undefined).is('string');
+			debug.assert(config.port).ignore(undefined).is('integer');
+
+			debug.assert(config.ca).ignore(undefined).is('string');
+			debug.assert(config.key).ignore(undefined).is('string');
+			debug.assert(config.cert).ignore(undefined).is('string');
+
+			this._config = config;
 
 			this._serviceName = config.listen;
 

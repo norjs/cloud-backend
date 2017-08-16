@@ -1,8 +1,11 @@
-import Q from 'q';
-import _ from 'lodash';
-import is from 'nor-is';
-import debug from 'nor-debug';
+import {
+	Q,
+	_,
+	is,
+	debug
+} from '../lib/index.js';
 
+/** This is the application main service. It will handle service setup. Each service will first be constructed, then called .$onConfig(), .$onInit() and finally .$onRun().  */
 export default class MainService {
 
 	constructor () {
@@ -79,7 +82,7 @@ export default class MainService {
 		return this;
 	}
 
-	/** Load application services
+	/** Register application services. Any service which has not been constructed, will be at this point.
 	 * @returns {Promise} Reference to itself, for chaining.
 	 */
 	loadServices () {
@@ -92,6 +95,7 @@ export default class MainService {
 
 			return this._serviceCache.register([this._serviceCache, this]).then(
 				() => Q.all(_.concat(
+
 					// Start up built in services
 					_.map(this._builtInServices, Service => this._serviceCache.register(Service)),
 
@@ -113,12 +117,13 @@ export default class MainService {
 				])
 			).then(() => this._infoLog('[main] All services started.'))
 
-		}).fail(err => {
-			this._errorLog('Failed to start some services: ' + ((err && err.message) || ''+err) );
-		});
+		}).fail(
+			err => this._errorLog('Failed to start some services: ' + ((err && err.message) || ''+err) )
+		);
 	}
 
-	/** Configure services
+	/** Configure services and call .$onConfig(config) on each service.
+	 * @param config {Object} Configuration options from command line
 	 */
 	configServices (config) {
 		return this._serviceCache.getUUIDs().then(uuids => Q.all(_.map(uuids,
@@ -135,7 +140,7 @@ export default class MainService {
 		});
 	}
 
-	/** Initialize services */
+	/** Initialize services and call .$onInit() on each service. */
 	initServices () {
 		return this._serviceCache.getUUIDs().then(uuids => Q.all(_.map(uuids,
 			uuid => this._serviceCache.get(uuid).then(instance => {
@@ -151,7 +156,7 @@ export default class MainService {
 		});
 	}
 
-	/** Call each service to tell all services are running */
+	/** Call .$onRun() on each service to tell all services are running */
 	runServices () {
 		return this._serviceCache.getUUIDs().then(uuids => Q.all(_.map(uuids,
 			uuid => this._serviceCache.get(uuid).then(instance => {

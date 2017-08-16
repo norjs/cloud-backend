@@ -1,6 +1,8 @@
-import _ from 'lodash';
-import debug from 'nor-debug';
-import moment from 'moment';
+import {
+	_,
+	debug,
+	moment
+} from '../lib/index.js';
 
 /** The main service to handle backend HTTP(s) requests */
 export default class LogService {

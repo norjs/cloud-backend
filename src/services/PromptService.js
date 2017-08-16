@@ -1,11 +1,14 @@
-import Q from 'q';
-import _ from 'lodash';
-import is from 'nor-is';
-import debug from 'nor-debug';
+import {
+	Q,
+	_,
+	is,
+	debug,
+	getAllKeys,
+	notPrivate,
+	parsePrompt
+} from '../lib/index.js';
+
 import readline from 'readline';
-import { getAllKeys } from '../helpers.js';
-import { notPrivate } from '../helpers.js';
-import parsePrompt from '../lib/parsePrompt.js';
 
 /** This service implements a command line interface into cloud-backend */
 export default class PromptService {

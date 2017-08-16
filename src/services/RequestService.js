@@ -1,7 +1,8 @@
-import Q from 'q';
-import _ from 'lodash';
-import is from 'nor-is';
-import debug from 'nor-debug';
+import {
+	Q,
+	_,
+	debug
+} from '../lib/index.js';
 
 /** A core service to handle backend HTTP(s) requests using other smaller services which register to this one */
 export default class RequestService {

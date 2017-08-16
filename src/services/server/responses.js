@@ -7,14 +7,14 @@ import { HTTPError } from 'nor-errors';
 import { createBodyIDs } from '@sendanor/cloud-common';
 import parseRequestData from './parseRequestData.js';
 
-import { getAllKeys } from './helpers.js';
-import { notPrivate } from './helpers.js';
-import { getConstructors } from './helpers.js';
-import { notFunction } from './helpers.js';
-import { parseFunctionArgumentNames } from './helpers.js';
-
-const isProduction = process.env.NODE_ENV === 'production';
-const isDevelopment = !isProduction;
+import {
+	getAllKeys,
+	notPrivate,
+	getConstructors,
+	notFunction,
+	parseFunctionArgumentNames,
+	isDevelopment
+} from '../../lib/index.js';
 
 /** */
 export function prepareObjectPrototypeResponse (context, content, parent) {

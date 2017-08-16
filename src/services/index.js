@@ -3,17 +3,8 @@ import ServiceCache from './ServiceCache.js';
 import LogService from './LogService.js';
 import RequestService from './RequestService.js';
 import MainService from './MainService.js';
-import ServerService from './ServerService.js';
+import ServerService from './server';
 import PromptService from './PromptService.js';
-
-export {
-	ServiceCache,
-	LogService,
-	RequestService,
-	MainService,
-	ServerService,
-	PromptService
-};
 
 const builtInServices = [
 	LogService,
@@ -22,4 +13,12 @@ const builtInServices = [
 	PromptService
 ];
 
-export default builtInServices;
+export {
+	ServiceCache,
+	LogService,
+	RequestService,
+	MainService,
+	ServerService,
+	PromptService,
+	builtInServices
+};

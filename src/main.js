@@ -1,21 +1,23 @@
 #!/usr/bin/env node
+/* Sendanor's cloud micro service backend runner */
 
-/** Sendanor's cloud micro service backend runner
- */
+import {
+	_,
+	is,
+	debug,
+	moment,
+	fs,
+	getServiceByName
+} from './lib/index.js';
+
+import {
+	MainService,
+	ServiceCache,
+	builtInServices
+} from './services';
 
 import minimist from 'minimist';
-import _ from 'lodash';
-import is from 'nor-is';
-import debug from 'nor-debug';
-import Q from 'q';
-import fs from 'fs';
-import moment from 'moment';
-
-import getServiceByName from './getServiceByName.js';
-
-import {MainService} from './services';
-import {ServiceCache} from './services';
-import builtInServices from './services';
+//import fs from 'fs';
 
 const argv = minimist(process.argv.slice(2));
 
@@ -82,7 +84,7 @@ if (argv._.length === 0) {
 
 		// --*File
 		if (camelCaseKey.substr(-4, 4) === 'File') {
-			config[camelCaseKey.substr(0, camelCaseKey.length - 4)] = fs.readFileSync(value, {encoding:'utf8'});
+			config[camelCaseKey.substr(0, camelCaseKey.length - 4)] = fs.sync.readFile(value, {encoding:'utf8'});
 		}
 
 		// Other, directly

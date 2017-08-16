@@ -1,13 +1,19 @@
 
-import _ from 'lodash';
-import is from 'nor-is';
-import Q from 'q';
-import debug from 'nor-debug';
 import { HTTPError } from 'nor-errors';
-import { createContext } from './responses.js';
-import { prepareResponse } from './responses.js';
-import { prepareErrorResponse } from './responses.js';
-import { isPrivate } from './helpers.js';
+
+import {
+	Q,
+	_,
+	is,
+	debug,
+	isPrivate
+} from '../../lib/index.js';
+
+import {
+	createContext,
+	prepareResponse,
+	prepareErrorResponse
+} from './responses.js';
 
 /** Splits an URL string into parts (an array) */
 function _splitURL (url) {
