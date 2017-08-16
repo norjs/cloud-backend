@@ -11,7 +11,6 @@ export default class MainService {
 	constructor () {
 		this._log = undefined;
 		this._serviceCache = undefined;
-		this._request = undefined;
 		this._firstServiceUUID = undefined;
 		this._builtInServices = [];
 		this._userServices = [];
@@ -112,8 +111,8 @@ export default class MainService {
 				))
 			).then(
 				() => Q.all([
-					this._serviceCache.get('LogService').then(logService => this._log = logService),
-					this._serviceCache.get('RequestService').then(requestService => this._request = requestService)
+					this._serviceCache.get('LogService').then(logService => this._log = logService)
+					//this._serviceCache.get('RequestService').then(requestService => this._request = requestService)
 				])
 			).then(() => this._infoLog('[main] All services started.'))
 

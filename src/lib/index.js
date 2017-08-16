@@ -8,6 +8,7 @@ import debug from 'nor-debug';
 import moment from 'moment';
 import fs from 'nor-fs';
 import events from 'events';
+import PATH from 'path';
 
 // Older Node.js has EventEmitter as events.EventEmitter, not same as events
 const EventEmitter = is.function(events && events.EventEmitter) ? events.EventEmitter : events;
@@ -19,6 +20,7 @@ export {
 	debug,
 	moment,
 	fs,
+	PATH,
 	EventEmitter
 };
 

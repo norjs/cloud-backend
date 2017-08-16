@@ -7,37 +7,81 @@ import {
 	debug,
 	moment,
 	fs,
+	PATH,
 	getServiceByName
 } from './lib/index.js';
 
 import {
 	MainService,
 	ServiceCache,
-	builtInServices
+	PromptService,
+	ServerService,
+	RequestService,
+	defaultServices
 } from './services';
 
 import minimist from 'minimist';
-//import fs from 'fs';
 
-const argv = minimist(process.argv.slice(2));
+/**
+ * @returns {string} The command name
+ */
+function getCommandName (argv) {
+	debug.assert(argv).is('array');
+	debug.assert(argv[0]).is('string');
+	argv = [].concat(argv);
+	if (argv[0].substr(argv[0].length - '/node'.length).toLowerCase() === '/node') {
+		argv.shift();
+	} else if (argv[0].substr(argv[0].length - '/node.exe'.length).toLowerCase() === '/node.exe') {
+		argv.shift();
+	}
+	return PATH.basename(argv.shift());
+}
 
-const usage = [
-	'USAGE: ', process.argv[0], ' [OPT(s)] Service [...Service_N]',
-	'  where OPTS is:',
-	'    --protocol=PROTOCOL                 -- Server protocol; HTTPS (default), or HTTP',
-	'    --port=PORT                         -- Server port, by default 3000',
-	'    --listen[=SERVICE_NAME]             -- Service to use for incoming requests, by default the first service.',
-	'    --ca-file=path/to/ca.crt            -- PKI CA certificate file',
-	'    --cert-file=path/to/server.crt      -- PKI certificate file',
-	'    --key-file=path/to/server.key       -- PKI private key file',
-	'    --auth=basic[:USER[:PWHASH]]        -- Enable HTTP basic auth in server',
-	'  and Service is a path to JavaScript class file or URL to connect to.',
-	'  Unless you specify --listen, no server is started.'
-].join('\n');
+/** Prints usage information
+ * @param argv {Array.<String>} Array of command line arguments. We're interested only the first two here, which are
+ *                              used to read the command which was used when this application was started. Node will be
+ *                              ignored.
+ */
+function usage (argv) {
+	debug.assert(argv).is('array');
+	debug.assert(argv[0]).is('string');
 
-if (argv._.length === 0) {
-	console.log(usage);
-} else {
+	console.log([
+		'USAGE: ' + getCommandName(argv) + ' [OPT(s)] [Service [...Service_N]]',
+		'',
+		'Service is a path to a JavaScript class file or a URL to connect to.',
+		'',
+		'Options for PromptService:',
+		'',
+		'    --prompt[=SERVICE_NAME]         -- Sets a service to use, defaults to the first service.',
+		'',
+		'  Note! Unless you specify --prompt, no PromptService is started.',
+		'',
+		'Options for ServerService:',
+		'',
+		'    --listen[=SERVICE_NAME]         -- Service to use for incoming requests, by default the first service.',
+		'    --protocol=PROTOCOL             -- Server protocol; HTTPS (default), or HTTP',
+		'    --port=PORT                     -- Server port, by default 3000',
+		'    --auth=basic[:USER[:PWHASH]]    -- Enable HTTP basic auth in server',
+		'',
+		'  These options are required when HTTPS is enabled:',
+		'',
+		'    --ca-file=path/to/ca.crt        -- PKI CA certificate file',
+		'    --cert-file=path/to/server.crt  -- PKI certificate file',
+		'    --key-file=path/to/server.key   -- PKI private key file',
+		'',
+		'  Note! Unless you specify --listen, --port or --protocol, no ServerService is started.',
+		'',
+	].join('\n'));
+}
+
+/** Create configuration object
+ * @param argv_ {Array.<String>} Array of command line arguments.
+ */
+function getConfig (argv_) {
+	debug.assert(argv_).is('array');
+
+	const argv = minimist(argv_.slice(2));
 
 	let config = {};
 
@@ -96,33 +140,67 @@ if (argv._.length === 0) {
 		config.listen = '';
 	}
 
-	const servicePaths = argv._;
+	config.servicePaths = argv._;
 
-	const userServices = _.map(servicePaths, servicePath => {
+	config.userServices = _.map(config.servicePaths, servicePath => {
 		debug.assert(servicePath).is('string');
 		return getServiceByName(servicePath);
 	});
 
-	if ( (config.protocol === 'https') && ((!config.ca) || (!config.cert) || (!config.key)) ) {
-		console.log(usage);
-	} else {
+	config.builtInServices = [].concat(defaultServices);
 
-		const $main = new MainService();
+	if (config.protocol || config.port || config.listen) {
 
-		$main.setServiceCache(ServiceCache)
-		 .setBuiltInServices(builtInServices)
-		 .setUserServices(userServices)
-		 .loadServices().then(
-			m => m.configServices(config)
-		).then(
-			m => m.initServices()
-		).then(
-			m => m.runServices()
-		).fail(err => {
-			const log = $main.getLog();
-			const f = log && is.function(log.error) ? log.error : debug.error;
-			f('Exception: ', err);
-		}).done();
+		config.protocol = config.protocol || 'https';
+
+		config.builtInServices.push(RequestService);
+		config.builtInServices.push(ServerService);
 	}
 
+	if (config.prompt) {
+		config.builtInServices.push(PromptService);
+	}
+
+	return config;
 }
+
+/** The main function for cloud-backend command
+ * @param argv_ {Array.<String>} Array of command line arguments.
+ */
+function main (argv) {
+	debug.assert(argv).is('array');
+
+	const config = getConfig(argv);
+
+	if (config.help || config.h) {
+		return usage(argv);
+	}
+
+	if ( !(config.protocol || config.port || config.listen || config.prompt || config.userServices && config.userServices.length) ) {
+		return usage(argv);
+	}
+
+	if ( (config.protocol === 'https') && ((!config.ca) || (!config.cert) || (!config.key)) ) {
+		return usage(argv);
+	}
+
+	const $main = new MainService();
+
+	$main.setServiceCache(ServiceCache)
+	     .setBuiltInServices(config.builtInServices)
+	     .setUserServices(config.userServices)
+	     .loadServices().then(
+		m => m.configServices(config)
+	).then(
+		m => m.initServices()
+	).then(
+		m => m.runServices()
+	).fail(err => {
+		const log = $main.getLog();
+		const f = log && is.function(log.error) ? log.error : debug.error;
+		f('Exception: ', err);
+	}).done();
+
+} // main
+
+main(process.argv);

@@ -325,12 +325,12 @@ export default class ServiceCache extends EventEmitter {
 		return Q.when(s).then(service => {
 
 			if (is.function(service)) {
-				debug.log('function', service);
+				//debug.log('function', service);
 				return this._waitInjectedServices(service).then( () => this._registerFunction(service) );
 			}
 
 			if (is.array(service)) {
-				debug.log('array', service);
+				//debug.log('array', service);
 				let uuids = [];
 				return _.reduce(
 					_.map(service, s => () => this.register(s).then(uuid => uuids.push(uuid))),
@@ -340,7 +340,7 @@ export default class ServiceCache extends EventEmitter {
 			}
 
 			if (is.object(service)) {
-				debug.log('object', service);
+				//debug.log('object', service);
 				return this._registerInstance(service);
 			}
 

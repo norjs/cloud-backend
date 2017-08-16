@@ -1,6 +1,6 @@
 {
   "name": "@sendanor/cloud-backend",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Sendanor's Cloud Backend",
   "main": "dist/index.js",
   "bin": {
@@ -29,8 +29,8 @@
     "nodemon": "^1.11.0"
   },
   "dependencies": {
-    "@sendanor/cloud-common": "^1.0.0",
     "@sendanor/cloud-client": "^1.0.0",
+    "@sendanor/cloud-common": "^1.0.0",
     "apache-md5": "^1.1.2",
     "globals": "^10.0.0",
     "lodash": "^4.17.4",
@@ -38,6 +38,7 @@
     "moment": "^2.18.1",
     "nor-debug": "^1.0.0",
     "nor-errors": "^1.0.0",
+    "nor-fs": "^1.0.0",
     "nor-ref": "^1.0.0",
     "q": "^1.5.0",
     "reserved-words": "^0.1.1",

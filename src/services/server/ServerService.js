@@ -38,13 +38,22 @@ export default class ServerService {
 
 			this._serviceName = config.listen;
 
-			if (!this._serviceName) {
+			if ( (!this._serviceName) || (config.listen === true) ) {
 				return Q.when(this._main.getFirstServiceUUID()).then(id => this._serviceName = id);
 			}
 
 			return this._serviceName;
 
 		}).then(serviceName => {
+
+			const serviceRequestHandlerBuilder = serviceName ?
+				() => this._request.register({
+					'$onRequest': serviceRequestHandler(
+						serviceName,
+						name => this._serviceCache.get(name)
+					)
+				}) : () => ({ $onRequest: () => {} });
+
 			return _.reduce([
 				() => this._request.register({'$onRequest': coreRequestHandler}),
 				() => {
@@ -53,12 +62,7 @@ export default class ServerService {
 						return this._request.register({'$onRequest': basicAuthRequestHandler(config.auth.basic)});
 					}
 				},
-				() => this._request.register({
-					'$onRequest': serviceRequestHandler(
-						serviceName,
-						name => this._serviceCache.get(name)
-					)
-				})
+				serviceRequestHandlerBuilder
 			], (a, b) => a.then(b), Q())
 		});
 

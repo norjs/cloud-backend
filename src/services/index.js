@@ -6,11 +6,8 @@ import MainService from './MainService.js';
 import ServerService from './server';
 import PromptService from './PromptService.js';
 
-const builtInServices = [
-	LogService,
-	RequestService,
-	ServerService,
-	PromptService
+const defaultServices = [
+	LogService
 ];
 
 export {
@@ -20,5 +17,5 @@ export {
 	MainService,
 	ServerService,
 	PromptService,
-	builtInServices
+	defaultServices
 };

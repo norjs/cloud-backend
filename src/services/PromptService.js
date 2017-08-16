@@ -13,7 +13,10 @@ import readline from 'readline';
 /** This service implements a command line interface into cloud-backend */
 export default class PromptService {
 
-	constructor (ServiceCache) {
+	constructor (MainService, ServiceCache) {
+
+		this._main = MainService;
+
 		this._ServiceCache = ServiceCache;
 
 		/** {Array.<Object>} Context path */
@@ -24,6 +27,20 @@ export default class PromptService {
 
 		/** {Object.<ServiceId,ServiceObject>} */
 		this._services = {};
+
+	}
+
+	/** */
+	$onConfig (config) {
+		debug.assert(config).is('object');
+		debug.assert(config.prompt).ignore(undefined).is('defined');
+		const promptContext = config && config.prompt || null;
+
+		if (is.string(promptContext)) {
+			return this._changeContext(promptContext);
+		}
+
+		return Q.when(this._main.getFirstServiceUUID()).then(id => is.string(id) && this._changeContext(id));
 	}
 
 	/** Initialize command line interface*/
