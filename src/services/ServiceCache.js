@@ -15,6 +15,17 @@ function __matchName (serviceName, s) {
 	return s && (s.name === serviceName);
 }
 
+/**
+ * @typedef InternalCacheObject
+ * @type {object}
+ * @property id {string} The UUID
+ * @property name {string} The service name
+ * @property instance {object} The instance of the service
+ * @property isConfig {boolean} True if $onConfig() has been called
+ * @property isInit {boolean} True if $onInit() has been called
+ * @property isRun {boolean} True if $onRun() has been called
+ */
+
 /** The service cache. All services available in a backend are registered into this cache. */
 export default class ServiceCache extends EventEmitter {
 
@@ -33,6 +44,8 @@ export default class ServiceCache extends EventEmitter {
 	/** The constructor is called when the backend starts */
 	constructor () {
 		super();
+
+		/** {Object.<String,InternalCacheObject>} */
 		this._services = {};
 	}
 
@@ -91,7 +104,7 @@ export default class ServiceCache extends EventEmitter {
 	 * @param service {String|Function} Service as a function or a UUID (as string), or as a service name (as string).
 	 * @returns {Array.<String>} Array of UUIDs for this service
 	 */
-	_getUUIDs (service) {
+	_getUUIDsForService (service) {
 
 		if (is.function(service)) {
 			service = _.get(service, 'constructor.name');
@@ -204,8 +217,10 @@ export default class ServiceCache extends EventEmitter {
 		this._services[uuid] = {
 			id: uuid,
 			name: serviceName,
-			//type: service,
-			instance
+			instance,
+			isConfig: false,
+			isInit: false,
+			isRun: false
 		};
 		console.log(moment().format() + ' [ServiceCache] Registered ' + serviceName + ' with UUID ' + uuid);
 		this._emitRegister(uuid);
@@ -230,9 +245,12 @@ export default class ServiceCache extends EventEmitter {
 		this._services[uuid] = {
 			id: uuid,
 			name: serviceName,
-			//type: serviceConstructor,
-			instance: service
+			instance: service,
+			isConfig: false,
+			isInit: false,
+			isRun: false
 		};
+
 		console.log(moment().format() + ' [ServiceCache] Registered ' + serviceName + ' with UUID ' + uuid);
 		this._emitRegister(uuid);
 		return uuid;
@@ -243,7 +261,7 @@ export default class ServiceCache extends EventEmitter {
 	 * @returns {Array} Array of service instances
 	 */
 	_getInstances (service) {
-		const uuids = this._getUUIDs(service);
+		const uuids = this._getUUIDsForService(service);
 		//debug.log('uuids = ', uuids);
 		return _.map(_.filter(uuids, uuid => _.has(this._services, uuid) && this._services[uuid].instance),
 			uuid => this._services[uuid].instance
@@ -307,7 +325,7 @@ export default class ServiceCache extends EventEmitter {
 	 * @fires ServiceCache#unregister
 	 */
 	_unregister (service) {
-		const uuids = this._getUUIDs(service);
+		const uuids = this._getUUIDsForService(service);
 		_.forEach(uuids, uuid => {
 			if (this._exists(uuid)) {
 				this._emitUnregister(this._services[uuid], uuid);
@@ -325,12 +343,10 @@ export default class ServiceCache extends EventEmitter {
 		return Q.when(s).then(service => {
 
 			if (is.function(service)) {
-				//debug.log('function', service);
 				return this._waitInjectedServices(service).then( () => this._registerFunction(service) );
 			}
 
 			if (is.array(service)) {
-				//debug.log('array', service);
 				let uuids = [];
 				return _.reduce(
 					_.map(service, s => () => this.register(s).then(uuid => uuids.push(uuid))),
@@ -340,7 +356,6 @@ export default class ServiceCache extends EventEmitter {
 			}
 
 			if (is.object(service)) {
-				//debug.log('object', service);
 				return this._registerInstance(service);
 			}
 
@@ -388,8 +403,135 @@ export default class ServiceCache extends EventEmitter {
 	/** Returns a list of registered service UUIDs
 	 * @returns {Array.<String>} An array of UUID strings
 	 */
+	_getUUIDs () {
+		return Object.keys(this._services);
+	}
+
+	/** Returns a list of registered service UUIDs
+	 * @returns {Array.<String>} An array of UUID strings
+	 */
 	getUUIDs () {
-		return Q.resolve(Object.keys(this._services));
+		return Q.fcall(() => this._getUUIDs());
+	}
+
+	/** Configure service(s) by calling .$onConfig(config) on them. The service will only be configured if it it was unconfigured.
+	 * @param service {String|Function} Service as a function or a UUID (as string), or as a service name (as string).
+	 * @param config {Object}
+	 */
+	config (service, config) {
+		return Q.fcall( () => {
+			debug.assert(config).is('object');
+			const uuids = this._getUUIDsForService(service);
+			return Q.all(_.map(uuids, uuid => Q.fcall( () => {
+
+				const serviceObj = this._services[uuid];
+
+				const instance = serviceObj.instance;
+
+				// Ignore if already configured
+				if (serviceObj.isConfig) return;
+
+				if (instance && is.function(instance.$onConfig)) {
+					return Q.when(instance.$onConfig(config)).then(
+						() => serviceObj.isConfig = true
+					);
+				}
+
+				serviceObj.isConfig = true;
+
+			})));
+		} );
+	}
+
+	/** Configure all unconfigured services by calling .$onConfig(config) on them
+	 * @param config {Object}
+	 */
+	configAll (config) {
+		return Q.fcall(() => {
+			debug.assert(config).is('object');
+			const uuids = this._getUUIDs();
+			return Q.all(_.map(uuids, uuid => this.config(uuid, config) ));
+		});
+	}
+
+	/** Initialize uninitialized services by calling .$onInit() on them
+	 * @param service {String|Function} Service as a function or a UUID (as string), or as a service name (as string).
+	 * @param config {Object}
+	 */
+	init (service) {
+		return Q.fcall( () => {
+			const uuids = this._getUUIDsForService(service);
+			return Q.all(_.map(uuids, uuid => Q.fcall( () => {
+
+				const serviceObj = this._services[uuid];
+
+				const instance = serviceObj.instance;
+
+				if (!serviceObj.isConfig) throw new Error("Service has not been configured" + serviceObj.name + " ["+uuid+"]");
+
+				// Ignore if already initialized
+				if (serviceObj.isInit) return;
+
+				if (instance && is.function(instance.$onInit)) {
+					return Q.when(instance.$onInit()).then(
+						() => serviceObj.isInit = true
+					);
+				}
+
+				serviceObj.isInit = true;
+
+			})));
+		} );
+	}
+
+	/** Initialize all uninitialized services
+	 * @param config {Object}
+	 */
+	initAll () {
+		return Q.fcall(() => {
+			const uuids = this._getUUIDs();
+			return Q.all(_.map(uuids, uuid => this.init(uuid) ));
+		});
+	}
+
+	/** Call .$onRun() on the service if has not been already configured successfully
+	 * @param service {String|Function} Service as a function or a UUID (as string), or as a service name (as string).
+	 * @param config {Object}
+	 */
+	run (service) {
+		return Q.fcall( () => {
+			const uuids = this._getUUIDsForService(service);
+			return Q.all(_.map(uuids, uuid => Q.fcall( () => {
+
+				const serviceObj = this._services[uuid];
+
+				const instance = serviceObj.instance;
+
+				if (!serviceObj.isInit) throw new Error("Service has not been initialized: " + serviceObj.name + " ["+uuid+"]");
+
+				// Ignore if already rund
+				if (serviceObj.isRun) return;
+
+				if (instance && is.function(instance.$onRun)) {
+					return Q.when(instance.$onRun()).then(
+						() => serviceObj.isRun = true
+					);
+				}
+
+				serviceObj.isRun = true;
+
+			})));
+		} );
+	}
+
+	/** Call .$onRun() on every service which has not been already configured successfully
+	 * @param config {Object}
+	 */
+	runAll () {
+		return Q.fcall(() => {
+			const uuids = this._getUUIDs();
+			return Q.all(_.map(uuids, uuid => this.run(uuid) ));
+		});
 	}
 
 }

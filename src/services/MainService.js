@@ -125,13 +125,7 @@ export default class MainService {
 	 * @param config {Object} Configuration options from command line
 	 */
 	configServices (config) {
-		return this._serviceCache.getUUIDs().then(uuids => Q.all(_.map(uuids,
-			uuid => this._serviceCache.get(uuid).then(instance => {
-				if (instance && is.function(instance.$onConfig)) {
-					return instance.$onConfig(config);
-				}
-			})
-		))).then(
+		return this._serviceCache.configAll(config).then(
 			() => this._infoLog('[main] All services configured.')
 		).fail(err => {
 			this._errorLog('Failed to configure some services: ' + ((err && err.message) || ''+err));
@@ -141,13 +135,7 @@ export default class MainService {
 
 	/** Initialize services and call .$onInit() on each service. */
 	initServices () {
-		return this._serviceCache.getUUIDs().then(uuids => Q.all(_.map(uuids,
-			uuid => this._serviceCache.get(uuid).then(instance => {
-				if (instance && is.function(instance.$onInit)) {
-					return instance.$onInit();
-				}
-			})
-		))).then(
+		return this._serviceCache.initAll().then(
 			() => this._infoLog('[main] All services initialized.')
 		).fail(err => {
 			this._errorLog('Failed to initialize some services: ' + ((err && err.message) || ''+err));
@@ -157,13 +145,7 @@ export default class MainService {
 
 	/** Call .$onRun() on each service to tell all services are running */
 	runServices () {
-		return this._serviceCache.getUUIDs().then(uuids => Q.all(_.map(uuids,
-			uuid => this._serviceCache.get(uuid).then(instance => {
-				if (instance && is.function(instance.$onRun)) {
-					return instance.$onRun();
-				}
-			})
-		))).then(
+		return this._serviceCache.runAll().then(
 			() => this._infoLog('[main] All services running.')
 		).fail(err => {
 			this._errorLog('Failed to call run on some services: ' + ((err && err.message) || ''+err));
