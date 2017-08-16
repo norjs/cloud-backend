@@ -49,7 +49,7 @@ function usage (argv) {
 	console.log([
 		'USAGE: ' + getCommandName(argv) + ' [OPT(s)] [Service [...Service_N]]',
 		'',
-		'Service is a path to a JavaScript class file or a URL to connect to.',
+		'Service is a path to a JavaScript class file or a URL to connect to a remote cloud-backend.',
 		'',
 		'Options for PromptService:',
 		'',
