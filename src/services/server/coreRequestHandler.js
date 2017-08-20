@@ -21,10 +21,14 @@ const longPollingWatchDelay = parseInt(process.env.CLOUD_CLIENT_LONG_POLLING_SER
 /** Send a reply in JSON format */
 function jsonReply2 (content, counter) {
 	try {
-		return JSON.stringify(content, null, 2) + "\n";
+		return JSON.stringify(content);
 	} catch (err) {
 
 		if (! (err && err.message && err.message.indexOf('Converting circular structure to JSON') >= 0) ) {
+			throw err;
+		}
+
+		if (!is.object(content)) {
 			throw err;
 		}
 
@@ -33,7 +37,7 @@ function jsonReply2 (content, counter) {
 			return '"Stringify Error: Circular structure detected"';
 		}
 
-		return '{' + _.map( Object.keys(content), key => '"' + key + '": ' + jsonReply2(content[key], counter) ).join(', ') + '}';
+		return '{' + _.map( Object.keys(content), key => '' + jsonReply2(key, counter) + ': ' + jsonReply2(content[key], counter) ).join(', ') + '}';
 	}
 }
 
@@ -51,7 +55,7 @@ function jsonReply (content) {
 			throw err;
 		}
 
-		return '{' + _.map( Object.keys(content), key => '"' + key + '": ' + jsonReply2(content[key], 0) ).join(', ') + '}';
+		return '{' + _.map( Object.keys(content), key =>  '' + jsonReply2(key, 0) + ': ' + jsonReply2(content[key], 0) ).join(', ') + '}';
 	}
 }
 

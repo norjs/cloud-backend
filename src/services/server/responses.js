@@ -72,7 +72,9 @@ export function prepareObjectPrototypeResponse (context, content, parent) {
 
 	//debug.log('parent [#5] = ', parent);
 
-	_.forEach(methods, method => body[method] = prepareFunctionResponse(context, content[method], context.$ref(method)) );
+	_.forEach(methods, method => {
+		body[method] = prepareFunctionResponse(context, content[method], context.$ref(method));
+	});
 
 	let id, hash;
 	[id, hash] = createBodyIDs(body);
@@ -110,11 +112,15 @@ export function prepareObjectResponse (context, content) {
 		$type: getConstructors(content)
 	};
 
-	_.forEach(members, member => body[member] = _.cloneDeep(content[member]) );
+	_.forEach(members, member => {
+		body[member] = _.cloneDeep(content[member])
+	});
 
 	//debug.log('content [after#2] = ', content);
 
-	_.forEach(methods, method => body[method] = prepareFunctionResponse(context, content[method], context.$ref(method)) );
+	_.forEach(methods, method => {
+		body[method] = prepareFunctionResponse(context, content[method], context.$ref(method))
+	});
 
 	let id, hash;
 	[id, hash] = createBodyIDs(body);
@@ -158,7 +164,9 @@ export function prepareFunctionResponse (context, f, ref) {
 		$args: parseFunctionArgumentNames(f)
 	};
 
-	getAllKeys(f).filter(notPrivate).filter(notArgumentsOrCaller).filter(key => notFunction(f[key])).forEach( key => body[key] = f[key] );
+	getAllKeys(f).filter(notPrivate).filter(notArgumentsOrCaller).filter(key => notFunction(f[key])).forEach( key => {
+		body[key] = f[key];
+	} );
 
 	return body;
 }
@@ -243,7 +251,9 @@ export function prepareErrorResponse (context, code, message, exception) {
 		};
 
 		_.forEach(getAllKeys(exception).filter(notPrivate).filter(notFunction),
-			key => body.exception[key] = _parseExceptionProperty(key, exception[key]) );
+			key => {
+			body.exception[key] = _parseExceptionProperty(key, exception[key]);
+		});
 	}
 
 	//debug.log( 'exception: ' , Object.keys(body.exception));
