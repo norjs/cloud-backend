@@ -1,6 +1,6 @@
 {
   "name": "@sendanor/cloud-backend",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Sendanor's Cloud Backend",
   "main": "dist/index.js",
   "bin": {
@@ -39,6 +39,7 @@
     "nor-debug": "^1.0.0",
     "nor-errors": "^1.0.0",
     "nor-fs": "^1.0.0",
+    "nor-is": "^1.0.0",
     "nor-ref": "^1.0.0",
     "q": "^1.5.0",
     "reserved-words": "^0.1.1",
