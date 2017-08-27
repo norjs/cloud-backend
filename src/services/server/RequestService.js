@@ -2,7 +2,7 @@ import {
 	Q,
 	_,
 	debug
-} from '../lib/index.js';
+} from '../../lib/index.js';
 
 /** A core service to handle backend HTTP(s) requests using other smaller services which register to this one */
 export default class RequestService {
