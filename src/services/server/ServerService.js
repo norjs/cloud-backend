@@ -1,7 +1,10 @@
-import Q from 'q';
-import _ from 'lodash';
-import is from 'nor-is';
-import debug from 'nor-debug';
+import {
+	Q,
+	_,
+	is,
+	debug,
+	EventEmitter
+} from '../../lib/index.js';
 
 import serviceRequestHandler from './serviceRequestHandler';
 import coreRequestHandler from './coreRequestHandler.js';
@@ -45,7 +48,12 @@ export default class ServerService {
 		 * @private
 		 */
 		this._serviceName = undefined;
+
 		this._config = null;
+
+		this._server = null;
+
+		this._io = null;
 	}
 
 	/**
@@ -168,13 +176,66 @@ export default class ServerService {
 	_startServer () {
 		const config = this._config;
 		return this._server = createServer(config, (req, res) => this._request.$onRequest(req, res)).then(() => {
-			let name = this._serviceName;
-			if (is.uuid(name)) {
-				return this._serviceCache.getNameById(name).then(name_ => {
-					this._log.info('[ServerService] Service ' + name_ + ' started at port ' + (config.port||3000) + ' as ' + (config.protocol||'https') );
-				});
-			}
+			const name = this._serviceName;
+			return Q.all([
+				Q.when(is.uuid(name) ? this._serviceCache.getNameById(name) : name),
+				this._serviceCache.get(name)
+	        ]);
+		}).spread( (name, instance) => {
 			this._log.info('[ServerService] Service ' + name + ' started at port ' + (config.port||3000) + ' as ' + (config.protocol||'https') );
+
+			if (instance && is.function(instance.emit)) {
+				return this._setupSocketIO(name, instance);
+			}
+		});
+	}
+
+	/** Setup socket.io connection on the server and proxy it to service's EventEmitter.
+	 * @param name {string} The name of instance
+	 * @param instance {EventEmitter|Object} Any service instance with .emit function capabilities.
+	 * @private
+	 */
+	_setupSocketIO (name, instance) {
+		const config = this._config;
+		const socketIoConfig = Object.assign({}, _.get(this._config, 'server.io') || {});
+
+		const io = this._io = require('socket.io')(this._server, socketIoConfig);
+		this._log.info('[ServerService] [Socket.IO] [' + name + '] Started at port ' + (config.port||3000) + ' as ' + (config.protocol||'https') );
+
+		let remoteEmitters = [];
+
+		const origEmit = instance.emit.bind(instance);
+
+		instance.emit = (...args) => {
+
+			Q.all(_.map(remoteEmitters, emit => {
+				debug.assert(emit).is('function');
+				return Q.when(emit(...args)).catch(
+					err => this._log.error('[Socket.io] Error in '+name+'.emit() while emitting outside: ' + err)
+				);
+			})).catch(
+				err => this._log.error('[Socket.io] Error in '+name+'.emit(): ' + err)
+			);
+
+			return origEmit(...args);
+		};
+
+		io.on('connection', socket => {
+			this._log.info( '[ServerService] [Socket.IO] [' + name + '] New connection' );
+
+			const f = (...args) => socket.emit('emit', args, name);
+
+			remoteEmitters.push(f);
+
+			socket.on('emit', (args, name) => instance.emit(...args));
+
+			socket.on('disconnecting',
+				reason => {
+					this._log.info( '[ServerService] [Socket.IO] [' + name + '] Connection disconnected: ' + reason );
+					_.remove(remoteEmitters, e => e === f);
+				}
+			);
+
 		});
 	}
 

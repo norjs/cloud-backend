@@ -349,7 +349,7 @@ export default class ServiceCache extends EventEmitter {
 	 * @returns {undefined}
 	 * @private
 	 */
-	_emitRegister(uuid) {
+	_emitRegister (uuid) {
 		this.emit('register', this._services[uuid], uuid);
 	}
 
@@ -359,7 +359,7 @@ export default class ServiceCache extends EventEmitter {
 	 * @returns {undefined}
 	 * @private
 	 */
-	_emitUnregister(uuid) {
+	_emitUnregister (uuid) {
 		this.emit('unregister', this._services[uuid], uuid);
 	}
 
