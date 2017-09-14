@@ -7,7 +7,7 @@
     "cloud-backend": "dist/main.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha",
     "compile": "babel src --out-dir dist --presets=es2015",
     "compile-examples": "babel examples --out-dir dist/examples --presets=es2015",
     "compile-watch": "babel --watch src --out-dir dist --presets=es2015",
@@ -35,6 +35,7 @@
     "globals": "^10.0.0",
     "lodash": "^4.17.4",
     "minimist": "^1.2.0",
+    "mocha": "^3.5.3",
     "moment": "^2.18.1",
     "nor-debug": "^1.0.0",
     "nor-errors": "^1.0.0",

@@ -10,6 +10,41 @@ export default class GenericParser {
 	constructor (line) {
 		debug.assert(line).ignore(undefined).is('string');
 		this._line = line || '';
+
+		this._boundaries = [
+			() => this.isEmpty() || this.startsWithWhite()
+		];
+
+	}
+
+	/**
+	 * Get current parse buffer
+	 * @returns {string}
+	 */
+	getValue () {
+		return this._line;
+	}
+
+	/** Set boundary test
+	 *
+	 * @param f {function}
+	 * @returns {GenericParser}
+	 */
+	setBoundary (f) {
+		debug.assert(f).is('function');
+		this._boundaries.push(f);
+		return this;
+	}
+
+	/** Unset boundary test
+	 *
+	 * @param f {function}
+	 * @returns {GenericParser}
+	 */
+	unsetBoundary (f) {
+		debug.assert(f).is('function');
+		_.pull(this._boundaries, f);
+		return this;
 	}
 
 	/** Eat whitespaces from start */
@@ -28,7 +63,7 @@ export default class GenericParser {
 	}
 
 	/** Eat a string, if possible
-	 * @param amount {Number} How many characters to eat
+	 * @param value {string} The string to eat, must be in the buffer, otherwise throws an parse error
 	 */
 	eatString (value) {
 		debug.assert(value).is('string');
@@ -50,11 +85,11 @@ export default class GenericParser {
 		return !!this._line.length;
 	}
 
-	/** Check if we're at a boundary
-	 * @returns {boolean} true if we're either out of data or a white space is next character
+	/** Check if we're at a boundary by executing boundary tests
+	 * @returns {boolean} true if we're at the boundary
 	 */
 	isBoundary () {
-		return this.isEmpty() || this.startsWithWhite();
+		return _.some(this._boundaries, f => f());
 	}
 
 	/** Check if we're not at a boundary
@@ -85,7 +120,6 @@ export default class GenericParser {
 		return this.startsWith(target) && this._isWhite(this._line[tl]);
 	}
 
-
 	/** Returns true if starts with digit ('0'-'9')
 	 * @param target {string}
 	 * @returns {boolean}
@@ -100,10 +134,6 @@ export default class GenericParser {
 	 */
 	startsWithAlpha () {
 		return this._line.length && 'qwertyuiopasdfghjklzxcvbnm'.indexOf(this._line[0].toLowerCase()) >= 0;
-	}
-
-	_isWhite (char) {
-		return ' \f\n\r\t\v'.indexOf(char) >= 0;
 	}
 
 	/** Returns true if starts with a white space
@@ -138,6 +168,16 @@ export default class GenericParser {
 		const ret = this._line.substr(0, amount);
 		this._line = this._line.substr(amount);
 		return ret;
+	}
+
+	/**
+	 *
+	 * @param char
+	 * @returns {boolean}
+	 * @private
+	 */
+	_isWhite (char) {
+		return ' \f\n\r\t\v'.indexOf(char) >= 0;
 	}
 
 }

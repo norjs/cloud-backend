@@ -7,10 +7,7 @@ import PromptParser from './PromptParser.js';
  */
 export function parsePrompt (line) {
 	const parser = new PromptParser(line);
-	parser.eatWhite();
-	if (parser.isEmpty()) return [];
-	const command = parser.parseString();
-	return [command].concat(parser.parseValues());
+	return parser.parsePrompt();
 }
 
 export default parsePrompt;

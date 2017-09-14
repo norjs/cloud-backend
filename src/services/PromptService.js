@@ -281,6 +281,7 @@ export default class PromptService {
 	onEcho (...args) {
 		console.log( args.map(arg => {
 			if (arg === undefined) return 'undefined';
+			if (is.function(arg)) return 'Function';
 			return JSON.stringify(arg);
 		}).join(', ') );
 	}

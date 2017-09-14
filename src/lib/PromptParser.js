@@ -11,18 +11,30 @@ export default class PromptParser extends GenericParser {
 		super(line);
 	}
 
-	/** Parse next object */
+	/** Parse next object
+	 *
+	 * @returns {Object}
+	 */
 	parseObject () {
 		//debug.log('.parseObject()');
+
+		let boundaryTest = () => this.startsWith(':');
+		let boundaryTest2 = () => this.startsWith(',') || this.startsWith('}');
 
 		let ret = {};
 
 		this.eatWhite().eatString('{').eatWhite();
 
+		this.setBoundary(boundaryTest2);
+
 		while (!this.startsWith('}')) {
 
+			this.setBoundary(boundaryTest);
 			const key = this.parseString();
+			this.unsetBoundary(boundaryTest);
+
 			this.eatWhite().eatString(':');
+
 			const value = this.parseValue();
 			ret[key] = value;
 
@@ -30,6 +42,7 @@ export default class PromptParser extends GenericParser {
 
 			if (this.startsWith(',')) {
 				this.eatString(',');
+				this.eatWhite();
 				continue;
 			}
 
@@ -38,18 +51,27 @@ export default class PromptParser extends GenericParser {
 			this.throwParseError();
 		}
 
+		this.unsetBoundary(boundaryTest2);
+
 		this.eatString('}');
 
 		return ret;
 	}
 
-	/** Parse next array */
+	/** Parse next array
+	 *
+	 * @returns {Array}
+	 */
 	parseArray () {
 		//debug.log('.parseArray()');
+
+		let boundaryTest = () => this.startsWith(',') || this.startsWith(']');
 
 		let ret = [];
 
 		this.eatWhite().eatString('[').eatWhite();
+
+		this.setBoundary(boundaryTest);
 
 		while (!this.startsWith(']')) {
 
@@ -60,6 +82,7 @@ export default class PromptParser extends GenericParser {
 
 			if (this.startsWith(',')) {
 				this.eatString(',');
+				this.eatWhite();
 				continue;
 			}
 
@@ -68,27 +91,33 @@ export default class PromptParser extends GenericParser {
 			this.throwParseError();
 		}
 
+		this.unsetBoundary(boundaryTest);
 		this.eatString(']');
 
 		return ret;
 
 	}
 
-	/** Parse next null */
+	/** Parse next null
+	 *
+	 * @returns {null}
+	 */
 	parseNull () {
 		//debug.log('.parseNull()');
 		this.eatWhite().eatString('null');
 		if ( this.notBoundary() ) this.throwParseError();
-		this.eatWhite();
+		//this.eatWhite();
 		return null;
 	}
 
-	/** Parse next undefined */
+	/** Parse next undefined
+	 * @returns {undefined}
+	 */
 	parseUndefined () {
 		//debug.log('.parseUndefined()');
 		this.eatWhite().eatString('undefined');
 		if ( this.notBoundary() ) this.throwParseError();
-		this.eatWhite();
+		//this.eatWhite();
 		return;
 	}
 
@@ -99,7 +128,7 @@ export default class PromptParser extends GenericParser {
 		//debug.log('.parseTrue()');
 		this.eatWhite().eatString('true');
 		if ( this.notBoundary() ) this.throwParseError();
-		this.eatWhite();
+		//this.eatWhite();
 		return true;
 	}
 
@@ -110,7 +139,7 @@ export default class PromptParser extends GenericParser {
 		//debug.log('.parseFalse()');
 		this.eatWhite().eatString('false');
 		if ( this.notBoundary() ) this.throwParseError();
-		this.eatWhite();
+		//this.eatWhite();
 		return false;
 	}
 
@@ -118,8 +147,6 @@ export default class PromptParser extends GenericParser {
 	 * @returns {string} Parsed string
 	 */
 	parseString () {
-		//debug.log('.parseString()');
-
 		let ret = "";
 
 		this.eatWhite();
@@ -130,13 +157,11 @@ export default class PromptParser extends GenericParser {
 		if (this.startsWith('"')) quote = '"';
 		if (this.startsWith("'")) quote = "'";
 
-		// If no quote character, parse until whitespace or empty
+		// If no quote character, parse until boundary
 		if (!quote) {
-			do {
-				if (this.startsWith(":")) break;
+			while (this.notBoundary()) {
 				ret += this.parseAmount(1);
-			} while ( this.notBoundary() );
-			this.eatWhite();
+			}
 			return ret;
 		}
 
@@ -228,7 +253,6 @@ export default class PromptParser extends GenericParser {
 	 * @returns {number} Parsed number
 	 */
 	parseNumber () {
-		//debug.log('.parseNumber()');
 
 		let tmp = "";
 
@@ -239,19 +263,14 @@ export default class PromptParser extends GenericParser {
 			tmp += '-';
 		}
 
-		//debug.log('tmp =', tmp);
-
 		if (!this.startsWithDigit()) this.throwParseError();
 
 		tmp += this.parseAmount(1);
-
-		//debug.log('tmp =', tmp);
 
 		if (tmp[tmp.length-1] !== '0') {
 			while (this.startsWithDigit()) {
 				tmp += this.parseAmount(1);
 			}
-			//debug.log('tmp =', tmp);
 		}
 
 		if (this.startsWith('.')) {
@@ -260,7 +279,6 @@ export default class PromptParser extends GenericParser {
 			while (this.startsWithDigit()) {
 				tmp += this.parseAmount(1);
 			}
-			//debug.log('tmp =', tmp);
 		}
 
 		if (this.startsWith('e') || this.startsWith('E')) {
@@ -273,21 +291,19 @@ export default class PromptParser extends GenericParser {
 			while (this.startsWithDigit()) {
 				tmp += this.parseAmount(1);
 			}
-
-			//debug.log('tmp =', tmp);
 		}
 
-		//debug.log('final tmp =', tmp);
 		return JSON.parse(tmp);
 	}
 
 	/** Parse next value
-	 * @returns {Any}
+	 *
+	 * @returns {*}
 	 */
 	parseValue () {
-		//debug.log('.parseValue()');
 		this.eatWhite();
 
+		if (this.startsWith('`')) return this.parseFunction();
 		if (this.startsWith('{')) return this.parseObject();
 		if (this.startsWith('[')) return this.parseArray();
 		if (this.startsWith('"')) return this.parseString();
@@ -307,15 +323,63 @@ export default class PromptParser extends GenericParser {
 	 * @returns {Array}
 	 */
 	parseValues () {
-		//debug.log('.parseValues()');
 		let ret = [];
 		this.eatWhite();
 		while (this.notEmpty()) {
+
 			ret.push(this.parseValue());
-			this.eatWhite();
+
+			if (this.startsWithWhite()) {
+				this.eatWhite();
+				continue;
+			}
+
+			if (this.isEmpty()) break;
+			if (this.isBoundary()) break;
+
+			this.throwParseError();
 		}
-		//debug.log('.parseValues() ret = ', ret);
+
 		return ret;
+	}
+
+	/** Parse function
+	 */
+	parseFunction () {
+		let ret = [];
+
+		let boundaryTest = () => this.startsWith('`') || this.startsWith(';');
+
+		this.eatWhite().eatString('`').setBoundary(boundaryTest).eatWhite();
+
+		while (!this.startsWith('`')) {
+
+			const values = this.parsePrompt();
+			ret.push(values);
+
+			this.eatWhite();
+
+			if (this.startsWith(';')) {
+				this.eatString(';');
+				continue;
+			}
+
+			if (this.startsWith('`')) break;
+
+			this.throwParseError();
+		}
+
+		this.unsetBoundary(boundaryTest).eatString('`');
+
+		return () => ret;
+	}
+
+	/** Parse a line of parameters, example `command '{"content":"Hello World"} 1234'` into {Array} ["command", {"content":"Hello World"}, 1234]
+	 * @param line {String} A string with one string command and zero or more JSON-like parameters.
+	 * @returns {Array} Parsed values in an array
+	 */
+	parsePrompt () {
+		return this.parseValues();
 	}
 
 }
