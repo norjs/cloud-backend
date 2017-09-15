@@ -1,3 +1,4 @@
+
 import _ from 'lodash';
 import debug from 'nor-debug';
 
@@ -99,7 +100,7 @@ export default class GenericParser {
 		return !this.isBoundary();
 	}
 
-	/** Returns true if starts with string
+	/** Returns true if next buffer starts with a string
 	 * @param target {string}
 	 * @returns {boolean}
 	 */
@@ -108,7 +109,7 @@ export default class GenericParser {
 		return _.startsWith(this._line, target);
 	}
 
-	/** Returns true if starts with string and ends in a boundary
+	/** Returns true if next buffer starts with a string and ends in a white space
 	 * @param target {string}
 	 * @returns {boolean}
 	 */
@@ -120,20 +121,20 @@ export default class GenericParser {
 		return this.startsWith(target) && this._isWhite(this._line[tl]);
 	}
 
-	/** Returns true if starts with digit ('0'-'9')
+	/** Returns true if next buffer starts with a digit ('0'-'9')
 	 * @param target {string}
 	 * @returns {boolean}
 	 */
 	startsWithDigit () {
-		return this._line.length && '0123456789'.indexOf(this._line[0]) >= 0;
+		return !!(this._line.length && '0123456789'.indexOf(this._line[0]) >= 0);
 	}
 
-	/** Returns true if starts with an alpha character (a-z, A-Z)
+	/** Returns true if next buffer starts with an alpha character (a-z, A-Z)
 	 * @param target {string}
 	 * @returns {boolean}
 	 */
 	startsWithAlpha () {
-		return this._line.length && 'qwertyuiopasdfghjklzxcvbnm'.indexOf(this._line[0].toLowerCase()) >= 0;
+		return !!(this._line.length && 'qwertyuiopasdfghjklzxcvbnm'.indexOf(this._line[0].toLowerCase()) >= 0);
 	}
 
 	/** Returns true if starts with a white space
@@ -141,7 +142,7 @@ export default class GenericParser {
 	 * @returns {boolean}
 	 */
 	startsWithWhite () {
-		return this._line.length && this._isWhite(this._line[0]);
+		return !!(this._line.length && this._isWhite(this._line[0]));
 	}
 
 	/** Returns false if starts with a white space, otherwise true.

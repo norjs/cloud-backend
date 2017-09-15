@@ -3,3 +3,4 @@
 /dist/
 /testing/
 *.log
+/.nyc_output/
