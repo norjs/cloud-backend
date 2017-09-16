@@ -1,3 +1,7 @@
+/**
+ * @module
+ */
+
 import _ from 'lodash';
 import debug from 'nor-debug';
 import apacheMd5 from "apache-md5";
@@ -9,6 +13,7 @@ export default class BasicAuthRequestHandler {
 	/**
 	 * @param config {object}
 	 * @returns {undefined}
+	 * @private
 	 */
 	$onConfig (config) {
 		this._config = _.get(config, 'auth.basic') || _.get(config, 'authBasic');
@@ -20,6 +25,7 @@ export default class BasicAuthRequestHandler {
 	 * @param req {object}
 	 * @param res {object}
 	 * @returns {undefined}
+	 * @private
 	 */
 	$onRequest (req, res, next) {
 		debug.log('req.url =', req.url);
@@ -88,8 +94,8 @@ export default class BasicAuthRequestHandler {
 	/** Sets WWW-Authenticate and throws 401 HTTP Error
 	 * @param req {object}
 	 * @param res {object}
-	 * @private
 	 * @returns {undefined}
+	 * @private
 	 */
 	_notOk (req, res) {
 		res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');

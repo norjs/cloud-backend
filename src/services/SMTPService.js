@@ -1,4 +1,6 @@
-/** SMTPService - The email sender service using remote SMTP server */
+/** SMTPService - The email sender service using remote SMTP server
+ * @module
+ */
 
 //import Q from 'q';
 import _ from 'lodash';
@@ -50,6 +52,7 @@ export default class SMTPService {
 	/**
 	 * Set configurations for this service.
 	 * @param config {SMTPOptionsObject}
+	 * @private
 	 */
 	setConfig (config) {
 		debug.assert(config).is('object');
@@ -93,11 +96,18 @@ export default class SMTPService {
 	}
 
 	/**
+	 *
+	 * @param config
+	 * @private
 	 */
 	$onConfig (config) {
 		this.setConfig(config && config.smtp || {});
 	}
 
+	/**
+	 *
+	 * @private
+	 */
 	$onInit () {
 		debug.assert(this._config).is('object');
 
@@ -111,6 +121,10 @@ export default class SMTPService {
 		this._mailer = mailer({"smtp": this._config});
 	}
 
+	/**
+	 *
+	 * @private
+	 */
 	$onDestroy () {
 		return this._mailer.close();
 	}

@@ -1,3 +1,6 @@
+/**
+ * @module
+ */
 
 import PromptParser from './PromptParser.js';
 

@@ -1,3 +1,4 @@
+/** @module */
 
 import { HTTPError } from 'nor-errors';
 
@@ -15,7 +16,12 @@ import {
 	prepareErrorResponse
 } from './responses.js';
 
-/** Splits an URL string into parts (an array) */
+/** Splits an URL string into parts (an array)
+ *
+ * @param url
+ * @returns {*}
+ * @private
+ */
 function _splitURL (url) {
 	url = _.trim(url);
 	if (!url) return [];
@@ -28,13 +34,26 @@ function _splitURL (url) {
 	return parts;
 }
 
-/** Try to parse JSON, if it looks like JSON */
+/** Try to parse JSON, if it looks like JSON
+ *
+ * @param body
+ * @private
+ */
 function _parseJson (body) {
 	if (!body) return;
 	return JSON.parse(body);
 }
 
-/** */
+/**
+ *
+ * @param context
+ * @param content
+ * @param part
+ * @param parts
+ * @param body
+ * @returns {Promise.<TResult>|*}
+ * @private
+ */
 function _getContentFunctionCall (context, content, part, parts, body) {
 	body = _parseJson(body);
 	//debug.log('body = ', body);
@@ -54,7 +73,14 @@ function _getContentFunctionCall (context, content, part, parts, body) {
 	});
 }
 
-/** Recursively get content */
+/** Recursively get content
+ *
+ * @param context
+ * @param content
+ * @param parts
+ * @returns {*}
+ * @private
+ */
 function _getContent (context, content, parts) {
 	debug.assert(parts).is('array');
 
@@ -104,6 +130,13 @@ function _getContent (context, content, parts) {
 	}
 }
 
+/**
+ *
+ * @param context
+ * @param subContent
+ * @returns {*}
+ * @private
+ */
 function __serviceRequestParseSubContent (context, subContent) {
 	//debug.log('subContent = ', subContent);
 	if (subContent !== undefined) {
@@ -113,6 +146,13 @@ function __serviceRequestParseSubContent (context, subContent) {
 	}
 }
 
+/**
+ *
+ * @param content
+ * @param req
+ * @returns {Promise.<TResult>|*}
+ * @private
+ */
 function ___serviceRequestHandler (content, req) {
 	const context = createContext(req);
 	const parts = _splitURL(context.url);
@@ -121,7 +161,13 @@ function ___serviceRequestHandler (content, req) {
 	);
 }
 
-/** */
+/**
+ *
+ * @param serviceInstance
+ * @param req
+ * @returns {*}
+ * @private
+ */
 function __serviceRequestHandler (serviceInstance, req) {
 	//debug.log('serviceInstance = ', serviceInstance);
 	if (is.array(serviceInstance)) {
@@ -137,6 +183,7 @@ function __serviceRequestHandler (serviceInstance, req) {
  * @param getInstance {Function}
  * @param req {Object}
  * @returns {Promise}
+ * @private
  */
 function _serviceRequestHandler (serviceName, getInstance, req) {
 	return Q.when(getInstance(serviceName)).then(

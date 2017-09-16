@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 /* Sendanor's cloud micro service backend runner */
 
 import {
@@ -203,4 +204,5 @@ function main (argv) {
 
 } // main
 
+// Run it
 main(process.argv);

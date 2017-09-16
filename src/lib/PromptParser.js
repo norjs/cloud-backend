@@ -1,19 +1,30 @@
+/**
+ * @module
+ */
 
 import GenericParser from './GenericParser.js';
 
-/** Parser for our prompt arguments, which are mostly JSON including few custom formats */
+/** Parser for our interactive CLI prompt.
+ *
+ *  Format is mostly JS/JSON compatible, with few custom formats, with support for
+ * `undefined` and also functions using backstick operator.
+ *
+ * @extends GenericParser
+ */
 export default class PromptParser extends GenericParser {
 
 	/** Construct a parser context
-	 * @param line {string}
+	 * @param line {string} The data to parse.
 	 */
 	constructor (line) {
 		super(line);
 	}
 
-	/** Parse next object
+	/** Parse an object from data next in the buffer.
 	 *
-	 * @returns {Object}
+	 * Example buffer content: `{a: 1, b: 2, c: 3}`
+	 *
+	 * @returns {Object} The parsed object
 	 */
 	parseObject () {
 		//debug.log('.parseObject()');
@@ -35,8 +46,7 @@ export default class PromptParser extends GenericParser {
 
 			this.eatWhite().eatString(':');
 
-			const value = this.parseValue();
-			ret[key] = value;
+			ret[key] = this.parseValue();
 
 			this.eatWhite();
 
@@ -58,9 +68,11 @@ export default class PromptParser extends GenericParser {
 		return ret;
 	}
 
-	/** Parse next array
+	/** Parse an array from data next in the buffer.
 	 *
-	 * @returns {Array}
+	 * Example buffer content: `[1, 2, 3]`
+	 *
+	 * @returns {Array} The parsed array
 	 */
 	parseArray () {
 		//debug.log('.parseArray()');
@@ -98,31 +110,35 @@ export default class PromptParser extends GenericParser {
 
 	}
 
-	/** Parse next null
+	/** Parse a null from data next in the buffer.
+	 *
+	 * Buffer should match ` *null\b`.
 	 *
 	 * @returns {null}
 	 */
 	parseNull () {
-		//debug.log('.parseNull()');
 		this.eatWhite().eatString('null');
 		if ( this.notBoundary() ) this.throwParseError();
-		//this.eatWhite();
 		return null;
 	}
 
-	/** Parse next undefined
-	 * @returns {undefined}
+	/** Parse an undefined from data next in the buffer.
+	 *
+	 * Buffer should match ` *undefined\b`.
+	 *
+	 * @returns {undefined} Always `undefined`
+	 * @throws TypeError
 	 */
 	parseUndefined () {
-		//debug.log('.parseUndefined()');
 		this.eatWhite().eatString('undefined');
 		if ( this.notBoundary() ) this.throwParseError();
-		//this.eatWhite();
-		return;
 	}
 
-	/** Parse next true
-	 * @returns {boolean} Always true
+	/** Parse a true from data next in the buffer.
+	 *
+	 * Buffer should match ` *true\b`.
+	 *
+	 * @returns {boolean} Always `true`
 	 */
 	parseTrue () {
 		//debug.log('.parseTrue()');
@@ -132,8 +148,11 @@ export default class PromptParser extends GenericParser {
 		return true;
 	}
 
-	/** Parse next false
-	 * @returns {boolean} Always false
+	/** Parse a false from data next in the buffer.
+	 *
+	 * Buffer should match ` *false\b`.
+	 *
+	 * @returns {boolean} Always `false`
 	 */
 	parseFalse () {
 		//debug.log('.parseFalse()');
@@ -143,8 +162,8 @@ export default class PromptParser extends GenericParser {
 		return false;
 	}
 
-	/** Parse next string
-	 * @returns {string} Parsed string
+	/** Parse a string from data next in the buffer.
+	 * @returns {string} The parsed string
 	 */
 	parseString () {
 		let ret = "";
@@ -202,14 +221,14 @@ export default class PromptParser extends GenericParser {
 					continue;
 				}
 
-				// formfeed
+				// Formfeed
 				if (this.startsWith('f')) {
 					this.eatString('f');
 					ret += '\f';
 					continue;
 				}
 
-				// new line
+				// New line
 				if (this.startsWith('n')) {
 					this.eatString('n');
 					ret += '\n';
@@ -230,7 +249,7 @@ export default class PromptParser extends GenericParser {
 					continue;
 				}
 
-				// unicode
+				// Unicode
 				if (this.startsWith('u')) {
 					this.eatString('u');
 					const hex = this.parseAmount(4);
@@ -249,8 +268,8 @@ export default class PromptParser extends GenericParser {
 		return ret;
 	}
 
-	/** Parse next number
-	 * @returns {number} Parsed number
+	/** Parse a number from data next in the buffer.
+	 * @returns {number} The parsed number
 	 */
 	parseNumber () {
 
@@ -296,7 +315,7 @@ export default class PromptParser extends GenericParser {
 		return JSON.parse(tmp);
 	}
 
-	/** Parse next value
+	/** Parse any value from data next in the buffer.
 	 *
 	 * @returns {*}
 	 */
@@ -319,8 +338,11 @@ export default class PromptParser extends GenericParser {
 		this.throwParseError();
 	}
 
-	/** Parse multiple values into an array
-	 * @returns {Array}
+	/** Parse multiple values from data next in the buffer into an array.
+	 *
+	 * Buffer should contain: ` *(VALUE)?( +(VALUE))*`
+	 *
+	 * @returns {Array} Parsed values in an array.
 	 */
 	parseValues () {
 		let ret = [];
@@ -343,7 +365,9 @@ export default class PromptParser extends GenericParser {
 		return ret;
 	}
 
-	/** Parse function
+	/** Parse a backstick block into a function.
+	 *
+	 * @returns {function(): Array}
 	 */
 	parseFunction () {
 		let ret = [];
@@ -374,8 +398,10 @@ export default class PromptParser extends GenericParser {
 		return () => ret;
 	}
 
-	/** Parse a line of parameters, example `command '{"content":"Hello World"} 1234'` into {Array} ["command", {"content":"Hello World"}, 1234]
-	 * @param line {String} A string with one string command and zero or more JSON-like parameters.
+	/** Parse a line of parameters from data next in the buffer.
+	 *
+	 * Example format `command '{"content":"Hello World"} 1234'` into {Array} ["command", {"content":"Hello World"}, 1234]
+	 *
 	 * @returns {Array} Parsed values in an array
 	 */
 	parsePrompt () {

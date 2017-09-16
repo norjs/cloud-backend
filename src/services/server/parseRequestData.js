@@ -1,3 +1,6 @@
+/**
+ * @module
+ */
 
 import Q from 'q';
 

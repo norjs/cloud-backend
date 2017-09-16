@@ -1,4 +1,6 @@
-/** EmailAuthenticationService */
+/** EmailAuthenticationService
+ * @module
+ */
 
 import Q from 'q';
 import _ from 'lodash';
@@ -11,7 +13,7 @@ import crypto from 'crypto';
  * @property {string} email - The email address
  */
 
-/** cloud-backend service for authenticating users with email address and/or verifying an email address is a working one */
+/** Service for authenticating users with email address and/or verifying an email address is a working one */
 export default class EmailAuthenticationService {
 
 	constructor (LogService, SMTPService) {
@@ -76,6 +78,10 @@ export default class EmailAuthenticationService {
 
 	}
 
+	/**
+	 *
+	 * @private
+	 */
 	$onInit () {
 
 		/** The subject used in verification emails
@@ -98,7 +104,10 @@ export default class EmailAuthenticationService {
 
 	}
 
-	/** Starts a interval (unless it's already running or there is no data to process) */
+	/** Starts a interval (unless it's already running or there is no data to process)
+	 *
+	 * @private
+	 */
 	_startInterval () {
 
 		if (this._interval) return;
@@ -116,7 +125,10 @@ export default class EmailAuthenticationService {
 
 	}
 
-	/** Stops a interval (unless it's already stopped) */
+	/** Stops a interval (unless it's already stopped)
+	 *
+	 * @private
+	 */
 	_stopInterval () {
 		if (this._interval) {
 			this._log.info('Stopped interval background processor.');
@@ -125,7 +137,11 @@ export default class EmailAuthenticationService {
 		}
 	}
 
-	/** Check interval status; start or stop it depending if there is data to process */
+	/** Check interval status; start or stop it depending if there is data to process
+	 *
+	 * @returns {*}
+	 * @private
+	 */
 	_refreshInterval () {
 
 		const isRunning = !!(this._interval);
@@ -144,6 +160,10 @@ export default class EmailAuthenticationService {
 
 	}
 
+	/**
+	 *
+	 * @private
+	 */
 	$onDestroy () {
 		this._stopInterval();
 	}
@@ -159,6 +179,7 @@ export default class EmailAuthenticationService {
 	 *   - Comments
 	 *
 	 * @returns {boolean}
+	 * @private
 	 */
 	_isValidAddress (email) {
 
@@ -370,6 +391,7 @@ export default class EmailAuthenticationService {
 	 *
 	 * @param apiKey {object|string}
 	 * @returns {object}
+	 * @private
 	 */
 	_clear (apiKey) {
 
@@ -410,6 +432,7 @@ export default class EmailAuthenticationService {
 
 	/** Returns a random string for secret validation code
 	 * @returns {string}
+	 * @private
 	 */
 	_createSecretCode () {
 		return crypto.randomBytes(4).toString('hex');
@@ -417,6 +440,7 @@ export default class EmailAuthenticationService {
 
 	/** Returns a random string for apiKey
 	 * @returns {string}
+	 * @private
 	 */
 	_createApiKey () {
 		return crypto.randomBytes(32).toString('hex');
@@ -425,6 +449,7 @@ export default class EmailAuthenticationService {
 	/** Register a verification code
 	 * @param secret {string}
 	 * @param email {string}
+	 * @private
 	 */
 	_registerCode (secret, email) {
 		debug.assert(secret).is('string');
@@ -451,6 +476,7 @@ export default class EmailAuthenticationService {
 
 	/** Unregister a code
 	 * @param email {string|object} Either the email address as a string or a saved code object with an email property.
+	 * @private
 	 */
 	_unregisterCode (email) {
 
@@ -471,6 +497,7 @@ export default class EmailAuthenticationService {
 
 	/** Removes unverified codes after `this._unverifiedTimeout` minutes
 	 * @returns {undefined}
+	 * @private
 	 */
 	_clearUnverified () {
 
@@ -504,7 +531,10 @@ export default class EmailAuthenticationService {
 
 	}
 
-	/** Mark codes as expired after `this._verifiedTimeout` minutes */
+	/** Mark codes as expired after `this._verifiedTimeout` minutes
+	 *
+	 * @private
+	 */
 	_clearVerified () {
 
 		const now = (new Date()).getTime();
@@ -540,7 +570,10 @@ export default class EmailAuthenticationService {
 
 	}
 
-	/** Remove expired codes after `this._expiredTimeout` minutes */
+	/** Remove expired codes after `this._expiredTimeout` minutes
+	 *
+	 * @private
+	 */
 	_clearExpired () {
 
 		const now = (new Date()).getTime();
@@ -576,7 +609,10 @@ export default class EmailAuthenticationService {
 
 	}
 
-	/** Refresh states, remove expired codes, etc */
+	/** Refresh states, remove expired codes, etc
+	 *
+	 * @private
+	 */
 	_refresh () {
 		this._clearUnverified();
 		this._clearVerified();
@@ -584,7 +620,11 @@ export default class EmailAuthenticationService {
 		this._refreshInterval();
 	}
 
-	/** Assert it is a email */
+	/** Assert it is a email
+	 *
+	 * @param email
+	 * @private
+	 */
 	_assertEmail (email) {
 		debug.assert(email).is('string');
 		if (!this._isValidAddress(email)) throw new TypeError("email is invalid: " + email);

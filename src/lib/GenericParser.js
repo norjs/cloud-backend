@@ -1,6 +1,10 @@
+/**
+ * @module
+ */
 
 import _ from 'lodash';
 import debug from 'nor-debug';
+import ParseError from './ParseError.js';
 
 /** Generic parser implementation */
 export default class GenericParser {
@@ -155,7 +159,7 @@ export default class GenericParser {
 
 	/** Throw a parse error */
 	throwParseError () {
-		throw new TypeError("Failed to parse at " + this._line.substr(0, 50) );
+		throw new ParseError("Near " + ('"'+this._line.substr(0, 50) + '"') );
 	}
 
 	/** Parse next `amount` characters

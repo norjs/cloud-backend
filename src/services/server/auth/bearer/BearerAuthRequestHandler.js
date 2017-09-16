@@ -1,3 +1,7 @@
+/**
+ * @module
+ */
+
 import _ from 'lodash';
 import debug from 'nor-debug';
 import apacheMd5 from "apache-md5";
@@ -13,6 +17,11 @@ export default class BearerAuthRequestHandler {
 
 	}
 
+	/**
+	 *
+	 * @param config
+	 * @private
+	 */
 	$onConfig (config) {
 		this._config = _.get(config, 'auth.bearer') || _.get(config, 'authBearer');
 
@@ -29,7 +38,14 @@ export default class BearerAuthRequestHandler {
 		throw new HTTPError(401);
 	}
 
-	/** */
+	/**
+	 *
+	 * @param req
+	 * @param res
+	 * @param next
+	 * @returns {*}
+	 * @private
+	 */
 	$onRequest (req, res, next) {
 
 		debug.log('req.url =', req.url);

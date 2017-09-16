@@ -1,3 +1,7 @@
+/**
+ * @module
+ */
+
 import ServerService from './ServerService.js';
 import RequestService from './RequestService.js';
 import BasicAuthRequestHandler from './auth/basic/BasicAuthRequestHandler.js';

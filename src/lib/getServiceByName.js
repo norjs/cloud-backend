@@ -1,3 +1,6 @@
+/**
+ * @module
+ */
 
 import Q from 'q';
 import is from 'nor-is';

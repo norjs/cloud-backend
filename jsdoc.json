@@ -1,0 +1,41 @@
+{
+  "tags": {
+    "allowUnknownTags": true
+  },
+  "sourceType": "module",
+  "source": {
+    "include": ["./src/"],
+    "includePattern": "\\.js$",
+    "excludePattern": "(node_modules/|docs)"
+  },
+  "plugins": [
+    "plugins/markdown",
+    "plugins/underscore"
+  ],
+  "templates": {
+    "cleverLinks": false,
+    "monospaceLinks": true,
+    "systemName": "cloud-backend",
+    "footer": "Created by Sendanor",
+    "copyright": "2017",
+    "navType": "vertical",
+    "theme": "spacelab",
+    "linenums": true,
+    "collapseSymbols": true,
+    "inverseNav": false
+  },
+  "opts": {
+    "template": "node_modules/docdash",
+    "encoding": "utf8",
+    "destination": "docs",
+    "readme": "./README.md",
+    "tutorials": "./tutorials",
+    "recurse": true,
+    "verbose": true,
+    "private": false
+  },
+  "docdash": {
+    "static": true,
+    "sort": true
+  }
+}

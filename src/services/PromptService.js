@@ -1,3 +1,7 @@
+/**
+ * @module
+ */
+
 import {
 	Q,
 	_,
@@ -10,7 +14,7 @@ import {
 
 import readline from 'readline';
 
-/** This service implements a command line interface into cloud-backend */
+/** This service implements an interactive command line interface */
 export default class PromptService {
 
 	constructor (MainService, ServiceCache) {
@@ -33,7 +37,12 @@ export default class PromptService {
 
 	}
 
-	/** */
+	/**
+	 *
+	 * @param config
+	 * @returns {Promise}
+	 * @private
+	 */
 	$onConfig (config) {
 		debug.assert(config).is('object');
 		debug.assert(config.prompt).ignore(undefined).is('defined');
@@ -46,7 +55,11 @@ export default class PromptService {
 		return Q.when(this._main.getFirstServiceUUID()).then(id => is.string(id) && this._changeContext(id));
 	}
 
-	/** Initialize command line interface*/
+	/** Initialize command line interface
+	 *
+	 * @returns {Promise}
+	 * @private
+	 */
 	$onInit () {
 
 		/** Readline Interface */
@@ -68,53 +81,78 @@ export default class PromptService {
 		return this._updateServiceCache().then( () => this._updatePrompt() ).then(() => this._runPrompt());
 	}
 
-	/** Update commands array */
+	/** Update commands array
+	 *
+	 * @private
+	 */
 	_updateCommands () {
 		/** {Array.<String>} List of available commands */
 		this._commands = this._getCommands();
 	}
 
-	/** */
+	/**
+	 *
+	 * @private
+	 */
 	_runPrompt () {
 		this._rl && this._rl.prompt();
 	}
 
 	/** Set command line prompt
-	 * @param  value {string}
+	 *
+	 * @param value {string}
+	 * @private
 	 */
 	_setPrompt (value) {
 		debug.assert(value).is('string');
 		this._rl && this._rl.setPrompt(value);
 	}
 
-	/** Get a path name from object in path */
+	/** Get a path name from object in path
+	 *
+	 * @param context
+	 * @returns {*}
+	 * @private
+	 */
 	_getPathName (context) {
 		return this._getType(context);
 	}
 
 	/** Returns current prompt based on context
 	 * @returns {Array.<String>}
+	 * @private
 	 */
 	_getPrompt () {
 		return '[' + _.map(this._contextPath, path => this._getPathName(path)).join('/') + ']> ';
 	}
 
+	/**
+	 *
+	 * @private
+	 */
 	_updatePrompt () {
 		this._setPrompt(this._getPrompt());
 	}
 
-	/** Uninitialize prompt */
+	/** Uninitialize prompt
+	 * @private
+	 */
 	$onDestroy () {
 		this._rl && this._rl.close();
 	}
 
-	/** */
+	/**
+	 *
+	 * @param err
+	 * @private
+	 */
 	_onError (err) {
 		debug.error(err);
 	}
 
 	/** Parse input line
 	 * @param line {string}
+	 * @private
 	 */
 	_onLine (line) {
 		return Q.fcall( () => {
@@ -157,7 +195,11 @@ export default class PromptService {
 		});
 	}
 
-	/** Returns list of commands available */
+	/** Returns list of commands available
+	 *
+	 * @returns {Array}
+	 * @private
+	 */
 	_getCommands () {
 		const customCommands = Object.keys(this._customCommands);
 
@@ -168,7 +210,12 @@ export default class PromptService {
 		return _.concat(customCommands, builtInCommands, contextCommands);
 	}
 
-	/** Completer */
+	/** Completer
+	 *
+	 * @param line
+	 * @returns {Array}
+	 * @private
+	 */
 	_completer (line) {
 		line = _.trim(line).toLowerCase();
 		const hits = _.filter(this._commands, c => c.startsWith(line));
@@ -189,7 +236,11 @@ export default class PromptService {
 		this._updateCommands();
 	}
 
-	/** Update internal cache for services */
+	/** Update internal cache for services
+	 *
+	 * @returns {Promise}
+	 * @private
+	 */
 	_updateServiceCache () {
 		let newData = {};
 		return this._ServiceCache.getUUIDs().then(
@@ -199,7 +250,9 @@ export default class PromptService {
 		).then(() => this._services = newData);
 	}
 
-	/** Exit program */
+	/** Exit program
+	 *
+	 */
 	onExit () {
 
 		// FIXME: Shutdown services.
@@ -207,12 +260,20 @@ export default class PromptService {
 		process.exit(0);
 	}
 
-	/** Alias for exit */
+	/** Alias for exit
+	 *
+	 * @returns {*}
+	 */
 	onQuit () {
 		return this.onExit();
 	}
 
-	/** Returns type as string */
+	/** Returns type as string
+	 *
+	 * @param value
+	 * @returns {*}
+	 * @private
+	 */
 	_getType (value) {
 		if (is.array(value)) return 'array';
 		if (is.object(value)) return _.get(value, 'constructor.name') || 'object';
@@ -223,12 +284,23 @@ export default class PromptService {
 		return type;
 	}
 
-	/** Returns a value of key */
+	/** Returns a value of key
+	 *
+	 * @param context
+	 * @param key
+	 * @private
+	 */
 	__getValue (context, key) {
 		return JSON.stringify(context[key]);
 	}
 
-	/** Returns a value of key */
+	/** Returns a value of key
+	 *
+	 * @param context
+	 * @param key
+	 * @returns {*}
+	 * @private
+	 */
 	_getValue (context, key) {
 		try {
 			return this.__getValue(context, key);
@@ -237,11 +309,20 @@ export default class PromptService {
 		}
 	}
 
+	/**
+	 *
+	 * @param value
+	 * @private
+	 */
 	_getName (value) {
 		return _.get(value, 'constructor.name');
 	}
 
-	/** Print context */
+	/** Print context
+	 *
+	 * @param newContext
+	 * @returns {*}
+	 */
 	onContext (newContext) {
 
 		if (newContext) {
@@ -258,7 +339,12 @@ export default class PromptService {
 		)).join('\n'));
 	}
 
-	/** */
+	/**
+	 *
+	 * @param name
+	 * @returns {Promise.<TResult>|*}
+	 * @private
+	 */
 	_changeContext (name) {
 
 		if (is.object(name)) {
@@ -277,7 +363,10 @@ export default class PromptService {
 		throw new TypeError("Unsupported context type: " + name);
 	}
 
-	/** Sample command */
+	/** Sample command
+	 *
+	 * @param args
+	 */
 	onEcho (...args) {
 		console.log( args.map(arg => {
 			if (arg === undefined) return 'undefined';
@@ -286,7 +375,9 @@ export default class PromptService {
 		}).join(', ') );
 	}
 
-	/** List all available contexts */
+	/** List all available contexts
+	 *
+	 */
 	onLs () {
 		const contexts = Object.keys(this._services).map(
 			serviceId => '[' + serviceId + '] ' + this._getName(this._services[serviceId])
@@ -295,18 +386,30 @@ export default class PromptService {
 		console.log( contexts.map(context => '  ' + context).join('\n') )
 	}
 
-	/** Change to context */
+	/** Change to context
+	 *
+	 * @param name
+	 * @returns {*}
+	 */
 	onCd (name) {
 		debug.assert(name).is('string');
 		return this.onContext(name);
 	}
 
-	/** Alias for cd */
+	/** Alias for cd
+	 *
+	 * @param name
+	 * @returns {*}
+	 */
 	onUse (name) {
 		return this.onCd(name);
 	}
 
-	/** Alias for cd */
+	/** Alias for cd
+	 *
+	 * @param name
+	 * @returns {*}
+	 */
 	onChange (name) {
 		return this.onCd(name);
 	}

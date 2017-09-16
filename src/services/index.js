@@ -1,3 +1,6 @@
+/**
+ * @module
+ */
 
 import ServiceCache from './ServiceCache.js';
 import LogService from './LogService.js';

@@ -1,3 +1,7 @@
+/**
+ * @module
+ */
+
 import {
 	Q,
 	_,
@@ -13,7 +17,7 @@ import BasicAuthRequestHandler from './auth/basic/BasicAuthRequestHandler.js';
 import BearerAuthRequestHandler from './auth/bearer/BearerAuthRequestHandler.js';
 import RequestService from './RequestService.js';
 
-/**  */
+/** Implements HTTP(S) request server */
 export default class ServerService {
 
 	/** Constructor */
@@ -58,6 +62,7 @@ export default class ServerService {
 
 	/**
 	 * @returns {Promise}
+	 * @private
 	 */
 	$onConfig (config) {
 		return Q.fcall( () => {
@@ -241,6 +246,7 @@ export default class ServerService {
 
 	/**
 	 * @returns {Promise}
+	 * @private
 	 */
 	$onInit () {
 		return this._startServer();

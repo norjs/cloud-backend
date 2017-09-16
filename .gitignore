@@ -1,6 +1,7 @@
+/testing/
 /.idea
 /node_modules
-/dist/
-/testing/
 *.log
 /.nyc_output/
+/dist/
+/docs/

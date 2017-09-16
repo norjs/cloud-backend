@@ -1,6 +1,7 @@
 import 'babel-polyfill';
 import assert from 'assert';
 import debug from 'nor-debug';
+import ParseError from '../src/lib/ParseError.js';
 import GenericParser from '../src/lib/GenericParser.js';
 
 describe('GenericParser', () => {
@@ -29,13 +30,13 @@ describe('GenericParser', () => {
 			debug.assert(parser.getValue()).equals('world');
 		});
 
-		it('cannot eat diferent string', () => {
+		it('cannot eat different string', () => {
 			const parser = new GenericParser('hello world');
 
 			assert.throws(
 				() => parser.eatString('world '),
-				err => (err instanceof Error) && /Failed to parse at/.test(err),
-				"unexpected error"
+				ParseError,
+				"ParseError: Near \"hello world\""
 			);
 
 			debug.assert(parser.getValue()).equals('hello world');
@@ -260,9 +261,9 @@ describe('GenericParser', () => {
 
 	describe('#throwParseError()', () => {
 
-		it('can throw TypeError', () => {
+		it('can throw ParseError', () => {
 			const parser = new GenericParser('');
-			assert.throws(() => parser.throwParseError(), TypeError, "Failed to parse at");
+			assert.throws(() => parser.throwParseError(), ParseError, "Failed to parse at");
 		});
 
 	});
@@ -281,7 +282,7 @@ describe('GenericParser', () => {
 
 		it('cannot parse too short string', () => {
 			const parser = new GenericParser('hi');
-			assert.throws(() => parser.parseAmount(5), TypeError, "Failed to parse at");
+			assert.throws(() => parser.parseAmount(5), ParseError, "Failed to parse at hi");
 		});
 
 	});

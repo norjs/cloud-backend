@@ -1,3 +1,7 @@
+/**
+ * @module
+ */
+
 import {
 	Q,
 	_,
@@ -67,14 +71,24 @@ export default class MainService {
 
 	}
 
-	/** Write to error log */
+	/** Write to error log
+	 *
+	 * @param args
+	 * @returns {MainService}
+	 * @private
+	 */
 	_errorLog (...args) {
 		const f = this._log && is.function(this._log.error) ? this._log.error : debug.error;
 		f(...args);
 		return this;
 	}
 
-	/** Write to info log */
+	/** Write to info log
+	 *
+	 * @param args
+	 * @returns {MainService}
+	 * @private
+	 */
 	_infoLog (...args) {
 		const f = this._log && is.function(this._log.error) ? this._log.info : debug.info;
 		f(...args);
@@ -145,7 +159,9 @@ export default class MainService {
 		});
 	}
 
-	/** Call .$onRun() on each service to tell all services are running */
+	/** Call .$onRun() on each service to tell all services are running
+	 *
+	 */
 	runServices () {
 		return this._serviceCache.runAll().then(
 			() => this._infoLog('[main] All services running.')

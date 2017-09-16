@@ -1,3 +1,6 @@
+/**
+ * @module
+ */
 
 import _ from 'lodash';
 import debug from 'nor-debug';

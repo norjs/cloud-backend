@@ -1,3 +1,6 @@
+/**
+ * @module
+ */
 
 // Dependencies
 
@@ -45,6 +48,9 @@ export {
 };
 
 // Parse prompt
+
+import ParseError from './ParseError.js';
+export { ParseError };
 
 import parsePrompt from './parsePrompt.js';
 export { parsePrompt };

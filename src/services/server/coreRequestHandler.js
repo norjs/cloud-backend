@@ -1,3 +1,6 @@
+/**
+ * @module
+ */
 
 import _ from 'lodash';
 import is from 'nor-is';
@@ -87,7 +90,14 @@ function setTimeoutPromise (f, time) {
 	return Q.Promise( resolve => setTimeout(() => resolve(Q.fcall(f)), time) );
 }
 
-/** */
+/**
+ *
+ * @param req
+ * @param res
+ * @param body
+ * @param next
+ * @private
+ */
 function _coreRequestResponseHandler (req, res, body, next) {
 
 	debug.assert(req).is('object');
@@ -144,7 +154,14 @@ function _coreRequestResponseHandler (req, res, body, next) {
 	return reply(context, res, body, statusCode);
 }
 
-/** */
+/**
+ *
+ * @param req
+ * @param res
+ * @param next
+ * @returns {Promise.<TResult>|*}
+ * @private
+ */
 function _coreRequestHandlerWithoutErrorHandling (req, res, next) {
 
 	debug.assert(req).is('object');
@@ -156,10 +173,21 @@ function _coreRequestHandlerWithoutErrorHandling (req, res, next) {
 	return Q.fcall( () => next() ).then(body => _coreRequestResponseHandler(req, res, body, next));
 }
 
+/**
+ *
+ * @param err
+ */
 function unexpectedErrorHandler (err) {
 	debug.error('Unexpected error while handling error:', err);
 }
 
+/**
+ *
+ * @param err
+ * @param context
+ * @param res
+ * @private
+ */
 function _standardErrorHandler (err, context, res) {
 
 	if (err instanceof HTTPError) {

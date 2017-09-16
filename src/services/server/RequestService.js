@@ -1,20 +1,25 @@
+/**
+ * @module
+ */
+
 import {
 	Q,
 	_,
 	debug
 } from '../../lib/index.js';
 
-/** A core service to handle backend HTTP(s) requests using other smaller services which register to this one */
+/** A core service to handle backend HTTP(s) requests using other smaller services which register to this one
+ */
 export default class RequestService {
 
 	constructor (ServiceCache) {
 
 		this._serviceCache = ServiceCache;
 
-		/** {Array.<Object>} Each service which has been registered with this service to handle requests */
+		/** @member {Array.<Object>} Each service which has been registered with this service to handle requests */
 		this._services = [];
 
-		/** {Function} Pre-built function to call for each request with {object} req, {object} res and {Function} next */
+		/** @member {Function} Pre-built function to call for each request with {object} req, {object} res and {Function} next */
 		this._requestHandler = () => {};
 
 	}
@@ -22,6 +27,7 @@ export default class RequestService {
 	/** Register a service to handle requests
 	 * @param service {Object} An object with a $onRequest method to handle requests.
 	 * @returns {Object} Reference to itself for chaining.
+	 * @private
 	 */
 	_register (service) {
 		debug.assert(service).is('object');
@@ -34,6 +40,7 @@ export default class RequestService {
 	/** Unregister a service
 	 * @param service {Object} An object with a $onRequest method to handle requests.
 	 * @returns {Object} Reference to itself for chaining.
+	 * @private
 	 */
 	_unregister (service) {
 		debug.assert(service).is('object');
@@ -61,6 +68,7 @@ export default class RequestService {
 
 	/** Builds a single request handler function from multiple request handlers
 	 * @returns {Array.<Function>}
+	 * @private
 	 */
 	_buildRequestHandler () {
 		return this._requestHandler = _.reduce(
@@ -90,6 +98,7 @@ export default class RequestService {
 	 * @param req {Object} The Node.js HTTP Request object
 	 * @param res {Object} The Node.js HTTP Resource object
 	 * @returns {Promise} A promise of
+	 * @private
 	 */
 	$onRequest (req, res, next) {
 		debug.assert(req).is('object');

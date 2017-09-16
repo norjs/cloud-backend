@@ -1,7 +1,8 @@
 /.git
+/src/
+/examples/
+/testing/
 /.idea
 /node_modules
-/src/
-/testing/
-/examples/
 *.log
+/.nyc_output/
