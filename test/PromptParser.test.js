@@ -245,6 +245,27 @@ describe('PromptParser', () => {
 			debug.assert(obj).is('number').equals(123.123);
 		});
 
+		it('can parse a negative float number', () => {
+			const parser = new PromptParser('-123.123');
+			const obj = parser.parseNumber();
+			debug.assert(parser.getValue()).equals('');
+			debug.assert(obj).is('number').equals(-123.123);
+		});
+
+		it('can parse a negative scientific float number', () => {
+			const parser = new PromptParser('-123.123e10');
+			const obj = parser.parseNumber();
+			debug.assert(parser.getValue()).equals('');
+			debug.assert(obj).is('number').equals(-123.123e10);
+		});
+
+		it('can parse a scientific float number', () => {
+			const parser = new PromptParser('123.123e-10');
+			const obj = parser.parseNumber();
+			debug.assert(parser.getValue()).equals('');
+			debug.assert(obj).is('number').equals(123.123e-10);
+		});
+
 	});
 
 	describe('#parseValue()', () => {
@@ -522,9 +543,7 @@ describe('PromptParser', () => {
 			let values = parser.parsePrompt();
 			debug.assert(parser.getValue()).equals('');
 			debug.assert(values).is('array').length(1);
-
 			values = values.shift();
-
 			debug.assert(values).is('array').length(3);
 			debug.assert(values[0]).equals(1);
 			debug.assert(values[1]).equals(2);
@@ -536,18 +555,94 @@ describe('PromptParser', () => {
 			let parts = parser.parsePrompt();
 			debug.assert(parser.getValue()).equals('');
 			debug.assert(parts).is('array').length(2);
-
 			let values = parts.shift();
-
 			debug.assert(values).is('array').length(3);
 			debug.assert(values[0]).equals(1);
 			debug.assert(values[1]).equals(2);
 			debug.assert(values[2]).equals(3);
-
 			values = parts.shift();
-
 			debug.assert(values).is('string').equals("foo bar");
+		});
 
+		it('can parse escaped string', () => {
+			const parser = new PromptParser('"foo \\"Hello bar\\""');
+			let parts = parser.parsePrompt();
+			debug.assert(parser.getValue()).equals('');
+			debug.assert(parts).is('array').length(1);
+			let values = parts.shift();
+			debug.assert(values).is('string').equals("foo \"Hello bar\"");
+		});
+
+		it('can parse escaped reverse solidus', () => {
+			const parser = new PromptParser('"foo \\\\"');
+			let parts = parser.parsePrompt();
+			debug.assert(parser.getValue()).equals('');
+			debug.assert(parts).is('array').length(1);
+			let values = parts.shift();
+			debug.assert(values).is('string').equals("foo \\");
+		});
+
+		it('can parse escaped solidus', () => {
+			const parser = new PromptParser('"foo \\/"');
+			let parts = parser.parsePrompt();
+			debug.assert(parser.getValue()).equals('');
+			debug.assert(parts).is('array').length(1);
+			let values = parts.shift();
+			debug.assert(values).is('string').equals("foo /");
+		});
+
+		it('can parse backspace', () => {
+			const parser = new PromptParser('"foo \\b"');
+			let parts = parser.parsePrompt();
+			debug.assert(parser.getValue()).equals('');
+			debug.assert(parts).is('array').length(1);
+			let values = parts.shift();
+			debug.assert(values).is('string').equals("foo \b");
+		});
+
+		it('can parse formfeed', () => {
+			const parser = new PromptParser('"foo \\f"');
+			let parts = parser.parsePrompt();
+			debug.assert(parser.getValue()).equals('');
+			debug.assert(parts).is('array').length(1);
+			let values = parts.shift();
+			debug.assert(values).is('string').equals("foo \f");
+		});
+
+		it('can parse new line', () => {
+			const parser = new PromptParser('"foo \\n"');
+			let parts = parser.parsePrompt();
+			debug.assert(parser.getValue()).equals('');
+			debug.assert(parts).is('array').length(1);
+			let values = parts.shift();
+			debug.assert(values).is('string').equals("foo \n");
+		});
+
+		it('can parse carriage return', () => {
+			const parser = new PromptParser('"foo \\r"');
+			let parts = parser.parsePrompt();
+			debug.assert(parser.getValue()).equals('');
+			debug.assert(parts).is('array').length(1);
+			let values = parts.shift();
+			debug.assert(values).is('string').equals("foo \r");
+		});
+
+		it('can parse horizontal tab', () => {
+			const parser = new PromptParser('"foo \\t"');
+			let parts = parser.parsePrompt();
+			debug.assert(parser.getValue()).equals('');
+			debug.assert(parts).is('array').length(1);
+			let values = parts.shift();
+			debug.assert(values).is('string').equals("foo \t");
+		});
+
+		it('can parse unicode', () => {
+			const parser = new PromptParser('"foo\\u1680bar"');
+			let parts = parser.parsePrompt();
+			debug.assert(parser.getValue()).equals('');
+			debug.assert(parts).is('array').length(1);
+			let values = parts.shift();
+			debug.assert(values).is('string').equals("foo\u1680bar");
 		});
 
 	});
@@ -561,6 +656,34 @@ describe('PromptParser', () => {
 			let f = parser.parseFunction();
 			debug.assert(parser.getValue()).equals('');
 			debug.assert(f).is('function');
+
+			let lines = f();
+			debug.assert(lines).is('array').length(1);
+
+			let data = lines.shift();
+			debug.assert(data).is('array').length(1);
+
+			debug.assert(data.shift()).is('string').equals('echo');
+
+		});
+
+		it('can parse function with two lines', () => {
+			const parser = new PromptParser('`echo;exit`');
+
+			let f = parser.parseFunction();
+			debug.assert(parser.getValue()).equals('');
+			debug.assert(f).is('function');
+
+			let lines = f();
+			debug.assert(lines).is('array').length(2);
+
+			let data = lines.shift();
+			debug.assert(data).is('array').length(1);
+			debug.assert(data.shift()).is('string').equals('echo');
+
+			data = lines.shift();
+			debug.assert(data).is('array').length(1);
+			debug.assert(data.shift()).is('string').equals('exit');
 
 		});
 

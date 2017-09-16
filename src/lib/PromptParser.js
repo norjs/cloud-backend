@@ -253,7 +253,7 @@ export default class PromptParser extends GenericParser {
 				if (this.startsWith('u')) {
 					this.eatString('u');
 					const hex = this.parseAmount(4);
-					ret += JSON.parse("\\u" + hex);
+					ret += JSON.parse("\"\\u" + hex + '"');
 					continue;
 				}
 
