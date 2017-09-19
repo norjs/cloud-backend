@@ -1,5 +1,5 @@
 /**
- * @module
+ * @module cloud-backend
  */
 
 // Dependencies

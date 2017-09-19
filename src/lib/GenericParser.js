@@ -1,5 +1,5 @@
 /**
- * @module
+ * @module cloud-backend
  */
 
 import _ from 'lodash';
@@ -7,7 +7,7 @@ import debug from 'nor-debug';
 import ParseError from './ParseError.js';
 
 /** Generic parser implementation */
-export default class GenericParser {
+class GenericParser {
 
 	/** Construct a parser context
 	 * @param line {string}
@@ -186,3 +186,6 @@ export default class GenericParser {
 	}
 
 }
+
+// Exports
+export default GenericParser;

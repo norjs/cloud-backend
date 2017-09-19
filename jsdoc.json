@@ -31,11 +31,11 @@
     "readme": "./README.md",
     "tutorials": "./tutorials",
     "recurse": true,
-    "verbose": true,
+    "verbose": false,
     "private": false
   },
   "docdash": {
-    "static": true,
+    "static": false,
     "sort": true
   }
 }

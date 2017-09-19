@@ -1,5 +1,5 @@
 /**
- * @module
+ * @module cloud-backend
  */
 
 import GenericParser from './GenericParser.js';
@@ -9,11 +9,13 @@ import GenericParser from './GenericParser.js';
  *  Format is mostly JS/JSON compatible, with few custom formats, with support for
  * `undefined` and also functions using backstick operator.
  *
+ * @class PromptParser
  * @extends GenericParser
  */
-export default class PromptParser extends GenericParser {
+class PromptParser extends GenericParser {
 
 	/** Construct a parser context
+	 *
 	 * @param line {string} The data to parse.
 	 */
 	constructor (line) {
@@ -68,7 +70,9 @@ export default class PromptParser extends GenericParser {
 		return ret;
 	}
 
-	/** Parse an array from data next in the buffer.
+	/**
+	 *
+	 * Parse an array from data next in the buffer.
 	 *
 	 * Example buffer content: `[1, 2, 3]`
 	 *
@@ -110,7 +114,9 @@ export default class PromptParser extends GenericParser {
 
 	}
 
-	/** Parse a null from data next in the buffer.
+	/**
+	 *
+	 * Parse a null from data next in the buffer.
 	 *
 	 * Buffer should match ` *null\b`.
 	 *
@@ -122,7 +128,9 @@ export default class PromptParser extends GenericParser {
 		return null;
 	}
 
-	/** Parse an undefined from data next in the buffer.
+	/**
+	 *
+	 * Parse an undefined from data next in the buffer.
 	 *
 	 * Buffer should match ` *undefined\b`.
 	 *
@@ -148,7 +156,9 @@ export default class PromptParser extends GenericParser {
 		return true;
 	}
 
-	/** Parse a false from data next in the buffer.
+	/**
+	 *
+	 * Parse a false from data next in the buffer.
 	 *
 	 * Buffer should match ` *false\b`.
 	 *
@@ -162,7 +172,10 @@ export default class PromptParser extends GenericParser {
 		return false;
 	}
 
-	/** Parse a string from data next in the buffer.
+	/**
+	 *
+	 * Parse a string from data next in the buffer.
+	 *
 	 * @returns {string} The parsed string
 	 */
 	parseString () {
@@ -268,7 +281,10 @@ export default class PromptParser extends GenericParser {
 		return ret;
 	}
 
-	/** Parse a number from data next in the buffer.
+	/**
+	 *
+	 * Parse a number from data next in the buffer.
+	 *
 	 * @returns {number} The parsed number
 	 */
 	parseNumber () {
@@ -315,7 +331,9 @@ export default class PromptParser extends GenericParser {
 		return JSON.parse(tmp);
 	}
 
-	/** Parse any value from data next in the buffer.
+	/**
+	 *
+	 * Parse any value from data next in the buffer.
 	 *
 	 * @returns {*}
 	 */
@@ -338,7 +356,9 @@ export default class PromptParser extends GenericParser {
 		this.throwParseError();
 	}
 
-	/** Parse multiple values from data next in the buffer into an array.
+	/**
+	 *
+	 * Parse multiple values from data next in the buffer into an array.
 	 *
 	 * Buffer should contain: ` *(VALUE)?( +(VALUE))*`
 	 *
@@ -365,7 +385,9 @@ export default class PromptParser extends GenericParser {
 		return ret;
 	}
 
-	/** Parse a backstick block into a function.
+	/**
+	 *
+	 * Parse a backstick block into a function.
 	 *
 	 * @returns {function(): Array}
 	 */
@@ -398,7 +420,8 @@ export default class PromptParser extends GenericParser {
 		return () => ret;
 	}
 
-	/** Parse a line of parameters from data next in the buffer.
+	/**
+	 * Parse a line of parameters from data next in the buffer.
 	 *
 	 * Example format `command '{"content":"Hello World"} 1234'` into {Array} ["command", {"content":"Hello World"}, 1234]
 	 *
@@ -409,3 +432,6 @@ export default class PromptParser extends GenericParser {
 	}
 
 }
+
+// Exports
+export default PromptParser;

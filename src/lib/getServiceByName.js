@@ -1,5 +1,5 @@
 /**
- * @module
+ * @module cloud-backend
  */
 
 import Q from 'q';
@@ -12,7 +12,7 @@ import cloudClient from '@sendanor/cloud-client';
  * @param name {String} The service module name based on CWD
  * @returns {Function} The class for specific service
  */
-export function getServiceByRequire (name) {
+function getServiceByRequire (name) {
 	debug.assert(name).is('string');
 
 	const absolutePath = resolve.sync(name, { basedir: process.cwd() });
@@ -32,7 +32,7 @@ export function getServiceByRequire (name) {
  * @param name {String} The service module name based on CWD
  * @returns {Function} The class for specific service
  */
-export function getServiceByURL (name) {
+function getServiceByURL (name) {
 	debug.assert(name).is('string');
 	return cloudClient(name);
 }
@@ -47,8 +47,15 @@ function _getServiceByName (name) {
  * @param name {String} The service module name based on CWD
  * @returns {Function} The class for specific service
  */
-export function getServiceByName (name) {
+function getServiceByName (name) {
 	return Q.fcall(() => _getServiceByName(name));
+}
+
+// Exports
+export {
+	getServiceByName,
+	getServiceByURL,
+	getServiceByRequire
 }
 
 export default getServiceByName;

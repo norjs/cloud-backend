@@ -1,5 +1,5 @@
 /**
- * @module
+ * @module cloud-backend
  */
 
 import _ from 'lodash';
@@ -17,11 +17,21 @@ const reservedPropertyNames = [
 	'prototype'
 ];
 
-/** */
-export const isReservedPropertyName = name => _.indexOf(reservedPropertyNames, name) >= 0;
+/** Returns true if reserved property name
+ *
+ * @param name {string}
+ * @returns {boolean}
+ */
+function isReservedPropertyName (name) {
+	return _.indexOf(reservedPropertyNames, name) >= 0;
+}
 
-/** Returns true if the keyword is a private */
-export function isPrivate (name) {
+/** Returns true if the keyword is a private
+ *
+ * @param name {string}
+ * @returns {boolean}
+ */
+function isPrivate (name) {
 	if (!name) return;
 	name = _.trim(name);
 	const firstLetter = name[0];
@@ -30,12 +40,33 @@ export function isPrivate (name) {
 	return !!isReservedPropertyName(name);
 }
 
-export const notPrivate = name => !isPrivate(name);
-export const isFunction = name => is.function(name);
-export const notFunction = name => !isFunction(name);
+/**
+ *
+ * @param name
+ * @returns {boolean}
+ */
+function notPrivate (name) { return !isPrivate(name); }
 
-/** Returns an array of all keys (own or not) of an object */
-export function getAllKeys (obj) {
+/**
+ *
+ * @param name
+ * @returns {boolean}
+ */
+function isFunction (name) { return is.function(name); }
+
+/**
+ *
+ * @param name
+ * @returns {boolean}
+ */
+function notFunction (name) { return !isFunction(name); }
+
+/** Returns an array of all keys (own or not) of an object
+ *
+ * @param obj
+ * @returns {Array}
+ */
+function getAllKeys (obj) {
 	let r = [];
 	//for (let key in obj) r.push(key);
 	do {
@@ -44,8 +75,12 @@ export function getAllKeys (obj) {
 	return _.uniq(r);
 }
 
-/** Returns an array of all constuctors of an object, without the "Object", or a string if there is only one. */
-export function getConstructors (obj) {
+/** Returns an array of all constuctors of an object, without the "Object", or a string if there is only one.
+ *
+ * @param obj
+ * @returns {Array}
+ */
+function getConstructors (obj) {
 	let r = [];
 	while (obj = Object.getPrototypeOf(obj)) {
 		r.push(_.get(obj, 'constructor.name'));
@@ -68,8 +103,12 @@ const STRIP_COMMENTS = /(\/\/.*$)|(\/\*[\s\S]*?\*\/)/mg;
 const STRIP_PARAMS = /(\s*=[^,]*(('(?:\\'|[^'\r\n])*')|("(?:\\"|[^"\r\n])*"))|(\s*=[^,]*))/mg;
 const ARGUMENT_NAMES = /([^\s,]+)/g;
 
-/** Parse function argument names */
-export function parseFunctionArgumentNames (f) {
+/** Parse function argument names
+ *
+ * @param f
+ * @returns {Array}
+ */
+function parseFunctionArgumentNames (f) {
 	debug.assert(f).is('function');
 
 	let str = f.toString().replace(STRIP_COMMENTS, '');
@@ -87,4 +126,16 @@ export function parseFunctionArgumentNames (f) {
 
 	if (!is.array(result)) return [];
 	return result;
+}
+
+// Exports
+export {
+	isReservedPropertyName,
+	isPrivate,
+	notPrivate,
+	isFunction,
+	notFunction,
+	getAllKeys,
+	getConstructors,
+	parseFunctionArgumentNames
 }

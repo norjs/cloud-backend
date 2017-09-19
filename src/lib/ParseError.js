@@ -1,12 +1,12 @@
 /**
- * @module
+ * @module cloud-backend
  */
 
 /**
  * Our parsing error for GenericParser and PromptParser.
  * @extends Error
  */
-export default class ParseError extends Error {
+class ParseError extends Error {
 
 	/**
 	 * Create a ParseError
@@ -24,3 +24,5 @@ export default class ParseError extends Error {
 	}
 
 }
+
+export default ParseError;
