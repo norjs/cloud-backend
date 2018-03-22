@@ -1,5 +1,5 @@
 /**
- * @module cloud-backend
+ * @module @sendanor/cloud-backend
  */
 
 import Q from 'q';
@@ -37,6 +37,12 @@ function getServiceByURL (name) {
 	return cloudClient(name);
 }
 
+/**
+ *
+ * @param name
+ * @returns {Function}
+ * @private
+ */
 function _getServiceByName (name) {
 	debug.assert(name).is('string');
 	if (is.url(name)) return getServiceByURL(name);

@@ -1,5 +1,5 @@
 /**
- * @module cloud-backend
+ * @module @sendanor/cloud-backend
  */
 
 // Dependencies

@@ -1,5 +1,5 @@
 /** EmailAuthenticationService
- * @module
+ * @module @sendanor/cloud-backend
  */
 
 import Q from 'q';
@@ -13,8 +13,10 @@ import crypto from 'crypto';
  * @property {string} email - The email address
  */
 
-/** Service for authenticating users with email address and/or verifying an email address is a working one */
-export default class EmailAuthenticationService {
+/** Service for authenticating users with email address and/or verifying an email address is a working one
+ * @static
+ */
+class EmailAuthenticationService {
 
 	constructor (LogService, SMTPService) {
 
@@ -631,3 +633,5 @@ export default class EmailAuthenticationService {
 	}
 
 }
+
+export default EmailAuthenticationService;

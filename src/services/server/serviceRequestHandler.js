@@ -1,4 +1,6 @@
-/** @module */
+/**
+ * @module @sendanor/cloud-backend
+ */
 
 import { HTTPError } from 'nor-errors';
 

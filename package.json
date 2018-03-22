@@ -1,5 +1,5 @@
 {
-  "name": "@sendanor/cloud-backend",
+  "name": "cloud-backend",
   "version": "1.0.11",
   "description": "Sendanor's Cloud Backend",
   "main": "dist/index.js",

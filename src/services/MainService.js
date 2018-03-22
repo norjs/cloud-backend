@@ -1,5 +1,5 @@
 /**
- * @module
+ * @module @sendanor/cloud-backend
  */
 
 import {
@@ -9,8 +9,12 @@ import {
 	debug
 } from '../lib/index.js';
 
-/** This is the application main service. It will handle service setup. Each service will first be constructed, then called .$onConfig(), .$onInit() and finally .$onRun().  */
-export default class MainService {
+/** This is the application main service. It will handle service setup. Each service will first be constructed, then
+ * called .$onConfig(), .$onInit() and finally .$onRun().
+ *
+ * @static
+ */
+class MainService {
 
 	constructor () {
 		this._log = undefined;
@@ -172,3 +176,5 @@ export default class MainService {
 	}
 
 }
+
+export default MainService;

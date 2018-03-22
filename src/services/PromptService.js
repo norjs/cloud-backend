@@ -1,5 +1,5 @@
 /**
- * @module
+ * @module @sendanor/cloud-backend
  */
 
 import {
@@ -14,8 +14,11 @@ import {
 
 import readline from 'readline';
 
-/** This service implements an interactive command line interface */
-export default class PromptService {
+/** This service implements an interactive command line interface
+ *
+ * @static
+ */
+class PromptService {
 
 	constructor (MainService, ServiceCache) {
 
@@ -415,3 +418,5 @@ export default class PromptService {
 	}
 
 }
+
+export default PromptService;

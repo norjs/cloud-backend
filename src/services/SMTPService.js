@@ -1,5 +1,5 @@
 /** SMTPService - The email sender service using remote SMTP server
- * @module
+ * @module @sendanor/cloud-backend
  */
 
 //import Q from 'q';
@@ -35,8 +35,11 @@ import mailer from 'nor-mailer';
  * @property {string} messageId -- The SMTP server message ID
  */
 
-/** */
-export default class SMTPService {
+/**
+ *
+ * @static
+ */
+class SMTPService {
 
 	constructor () {
 
@@ -154,3 +157,5 @@ export default class SMTPService {
 	}
 
 }
+
+export default SMTPService;

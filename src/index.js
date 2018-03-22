@@ -1,6 +1,6 @@
 /**
  * The cloud backend API
- * @module cloud-backend
+ * @module @sendanor/cloud-backend
  */
 
 export * from './lib/index';

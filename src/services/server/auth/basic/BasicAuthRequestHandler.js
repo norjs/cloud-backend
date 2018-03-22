@@ -1,5 +1,5 @@
 /**
- * @module
+ * @module @sendanor/cloud-backend
  */
 
 import _ from 'lodash';
@@ -7,8 +7,11 @@ import debug from 'nor-debug';
 import apacheMd5 from "apache-md5";
 import { HTTPError } from "nor-errors";
 
-/** HTTP Basic Authentication Support */
-export default class BasicAuthRequestHandler {
+/** HTTP Basic Authentication Support
+ *
+ * @static
+ */
+class BasicAuthRequestHandler {
 
 	/**
 	 * @param config {object}
@@ -102,3 +105,5 @@ export default class BasicAuthRequestHandler {
 		throw new HTTPError(401);
 	}
 }
+
+export default BasicAuthRequestHandler

@@ -1,5 +1,5 @@
 /**
- * @module
+ * @module @sendanor/cloud-backend
  */
 
 import _ from 'lodash';
@@ -207,7 +207,7 @@ function _standardErrorHandler (err, context, res) {
  * @param next {Function} A callback to tell if we should move to next middleware
  * @returns {Promise}
  */
-export default function coreRequestHandler (req, res, next) {
+function coreRequestHandler (req, res, next) {
 
 	debug.assert(req).is('object');
 	debug.assert(_.get(req, 'constructor.name')).is('string').equals('IncomingMessage');
@@ -232,3 +232,5 @@ export default function coreRequestHandler (req, res, next) {
 		return _standardErrorHandler(err, context, res);
 	}).fail(unexpectedErrorHandler);
 }
+
+export default coreRequestHandler;

@@ -1,5 +1,5 @@
 /**
- * @module
+ * @module @sendanor/cloud-backend
  */
 
 import {
@@ -35,16 +35,20 @@ function __matchName (serviceName, s) {
 
 /** The service cache. All services available in a backend are registered into this cache.
  * @class
+ * @extends EventEmitter
+ * @static
  */
-export default class ServiceCache extends EventEmitter {
+class ServiceCache extends EventEmitter {
 
 	/** Event when a service registers into the cache
+	 * @memberOf module:@sendanor/cloud-backend
 	 * @event ServiceCache#register
 	 * @param {Object} Service instance
 	 * @param {String} Service UUID
 	 */
 
 	/** Event when a service unregisters from the cache
+	 * @memberOf module:@sendanor/cloud-backend
 	 * @event ServiceCache#unregister
 	 * @param {Object} Service instance
 	 * @param {String} Service UUID
@@ -652,3 +656,5 @@ export default class ServiceCache extends EventEmitter {
 	}
 
 }
+
+export default ServiceCache;

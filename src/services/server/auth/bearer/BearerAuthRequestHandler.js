@@ -1,5 +1,5 @@
 /**
- * @module
+ * @module @sendanor/cloud-backend
  */
 
 import _ from 'lodash';
@@ -7,8 +7,11 @@ import debug from 'nor-debug';
 import apacheMd5 from "apache-md5";
 import { HTTPError } from "nor-errors";
 
-/** HTTP Bearer Authentication Support */
-export default class BearerAuthRequestHandler {
+/** HTTP Bearer Authentication Support
+ *
+ * @static
+ */
+class BearerAuthRequestHandler {
 
 	constructor (EmailAuthenticationService) {
 
@@ -79,3 +82,5 @@ export default class BearerAuthRequestHandler {
 	}
 
 }
+
+export default BearerAuthRequestHandler

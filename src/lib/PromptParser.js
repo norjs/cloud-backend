@@ -1,5 +1,5 @@
 /**
- * @module cloud-backend
+ * @module @sendanor/cloud-backend
  */
 
 import GenericParser from './GenericParser.js';
@@ -9,8 +9,8 @@ import GenericParser from './GenericParser.js';
  *  Format is mostly JS/JSON compatible, with few custom formats, with support for
  * `undefined` and also functions using backstick operator.
  *
- * @class PromptParser
  * @extends GenericParser
+ * @static
  */
 class PromptParser extends GenericParser {
 

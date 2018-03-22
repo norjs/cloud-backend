@@ -1,5 +1,5 @@
 /**
- * @module
+ * @module @sendanor/cloud-backend
  */
 
 import {
@@ -8,8 +8,11 @@ import {
 	moment
 } from '../lib/index.js';
 
-/** The main service to handle backend HTTP(s) requests */
-export default class LogService {
+/** The main service to handle backend HTTP(s) requests
+ *
+ * @static
+ */
+class LogService {
 
 	constructor () {
 	}
@@ -55,3 +58,5 @@ export default class LogService {
 	}
 
 }
+
+export default LogService;

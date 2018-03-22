@@ -1,5 +1,5 @@
 /**
- * @module
+ * @module @sendanor/cloud-backend
  */
 
 import ServerService from './ServerService.js';
@@ -8,10 +8,8 @@ import BasicAuthRequestHandler from './auth/basic/BasicAuthRequestHandler.js';
 import BearerAuthRequestHandler from './auth/bearer/BearerAuthRequestHandler.js';
 
 export {
-	ServerService,
+	ServerService as default,
 	RequestService,
 	BasicAuthRequestHandler,
 	BearerAuthRequestHandler
 }
-
-export default ServerService;

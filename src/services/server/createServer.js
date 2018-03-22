@@ -1,9 +1,8 @@
 /**
- * @module
+ * @module @sendanor/cloud-backend
  */
 
 import Q from 'q';
-import fs from 'fs';
 import https from 'https';
 import http from 'http';
 import debug from 'nor-debug';

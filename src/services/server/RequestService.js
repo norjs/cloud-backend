@@ -1,5 +1,5 @@
 /**
- * @module
+ * @module @sendanor/cloud-backend
  */
 
 import {
@@ -9,8 +9,10 @@ import {
 } from '../../lib/index.js';
 
 /** A core service to handle backend HTTP(s) requests using other smaller services which register to this one
+ *
+ * @static
  */
-export default class RequestService {
+class RequestService {
 
 	constructor (ServiceCache) {
 
@@ -109,3 +111,5 @@ export default class RequestService {
 	}
 
 }
+
+export default RequestService;

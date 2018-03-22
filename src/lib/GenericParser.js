@@ -1,12 +1,14 @@
 /**
- * @module cloud-backend
+ * @module @sendanor/cloud-backend
  */
 
 import _ from 'lodash';
 import debug from 'nor-debug';
 import ParseError from './ParseError.js';
 
-/** Generic parser implementation */
+/** Generic parser implementation
+ * @static
+ */
 class GenericParser {
 
 	/** Construct a parser context
@@ -52,13 +54,13 @@ class GenericParser {
 		return this;
 	}
 
-	/** Eat whitespaces from start */
+	/** Eat whitespaces from the start */
 	eatWhite () {
 		this._line = _.trimStart(this._line);
 		return this;
 	}
 
-	/** Eat characters from beging
+	/** Eat characters from the start
 	 * @param amount {Number} How many characters to eat
 	 */
 	eatAmount (amount) {

@@ -1,5 +1,5 @@
 /**
- * @module
+ * @module @sendanor/cloud-backend
  */
 
 import _ from 'lodash';
@@ -20,7 +20,7 @@ import {
 } from '../../lib/index.js';
 
 /** */
-export function prepareObjectPrototypeResponse (context, content, parent) {
+function prepareObjectPrototypeResponse (context, content, parent) {
 
 	//debug.log('parent [#1] = ', parent);
 
@@ -91,7 +91,7 @@ export function prepareObjectPrototypeResponse (context, content, parent) {
 }
 
 /** */
-export function prepareObjectResponse (context, content) {
+function prepareObjectResponse (context, content) {
 
 	//debug.log('content [before] = ', content);
 
@@ -156,7 +156,7 @@ function notArgumentsOrCaller (key) {
 }
 
 /** */
-export function prepareFunctionResponse (context, f, ref) {
+function prepareFunctionResponse (context, f, ref) {
 	debug.assert(context).is('object');
 	debug.assert(f).is('function');
 
@@ -175,7 +175,7 @@ export function prepareFunctionResponse (context, f, ref) {
 }
 
 /** */
-export function prepareScalarResponse (context, content) {
+function prepareScalarResponse (context, content) {
 
 	if (is.function(content)) {
 		return prepareFunctionResponse(context, content);
@@ -200,7 +200,7 @@ export function prepareScalarResponse (context, content) {
 }
 
 /** */
-export function prepareResponse (context, content) {
+function prepareResponse (context, content) {
 	if (content && (content instanceof Date)) {
 		return prepareScalarResponse(context, content);
 	}
@@ -221,7 +221,7 @@ function _parseExceptionProperty (key, value) {
 }
 
 /** */
-export function prepareErrorResponse (context, code, message, exception) {
+function prepareErrorResponse (context, code, message, exception) {
 
 	const $type = 'error';
 
@@ -329,8 +329,18 @@ class Context {
 }
 
 /** */
-export function createContext (req) {
+function createContext (req) {
 	debug.assert(req).is('object');
 	if (req.$context) return req.$context;
 	return req.$context = new Context(req);
+}
+
+export {
+	prepareObjectPrototypeResponse,
+	prepareObjectResponse,
+	prepareFunctionResponse,
+	prepareScalarResponse,
+	prepareResponse,
+	prepareErrorResponse,
+	createContext
 }

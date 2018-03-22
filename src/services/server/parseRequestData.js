@@ -1,9 +1,16 @@
 /**
- * @module
+ * @module @sendanor/cloud-backend
  */
 
 import Q from 'q';
 
+/**
+ *
+ * @param req
+ * @param listeners
+ * @param reject
+ * @private
+ */
 function _closeRequest (req, listeners, reject) {
 	if (listeners.error) req.removeListener('error', listeners.error);
 	if (listeners.end) req.removeListener('end', listeners.end);
@@ -11,16 +18,39 @@ function _closeRequest (req, listeners, reject) {
 	reject(new Error("Too much POST data detected. Connection closed."));
 }
 
+/**
+ *
+ * @param body
+ * @param req
+ * @param listeners
+ * @param resolve
+ * @private
+ */
 function _endListener (body, req, listeners, resolve) {
 	if (listeners.error) req.removeListener('error', listeners.error);
 	resolve(body);
 }
 
+/**
+ *
+ * @param err
+ * @param req
+ * @param listeners
+ * @param reject
+ * @private
+ */
 function _errorListener (err, req, listeners, reject) {
 	req.removeListener('end', listeners.end);
 	reject(err);
 }
 
+/**
+ *
+ * @param req
+ * @param resolve
+ * @param reject
+ * @private
+ */
 function _parseRequestData (req, resolve, reject) {
 	let body = '';
 
@@ -39,6 +69,8 @@ function _parseRequestData (req, resolve, reject) {
 }
 
 /** */
-export default function parseRequestData (req) {
+function parseRequestData (req) {
 	return Q.Promise((resolve, reject) => _parseRequestData(req, resolve, reject));
 }
+
+export default parseRequestData;

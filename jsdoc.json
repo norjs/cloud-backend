@@ -22,7 +22,11 @@
     "theme": "spacelab",
     "linenums": true,
     "collapseSymbols": true,
-    "inverseNav": false
+    "inverseNav": false,
+    "default": {
+      "outputSourceFiles": true,
+      "includeDate": false
+    }
   },
   "opts": {
     "template": "node_modules/docdash",
@@ -30,6 +34,7 @@
     "destination": "docs",
     "readme": "./README.md",
     "tutorials": "./tutorials",
+    "package": "./package.json",
     "recurse": true,
     "verbose": false,
     "private": false
@@ -37,5 +42,9 @@
   "docdash": {
     "static": false,
     "sort": true
+  },
+  "markdown": {
+    "parser": "gfm",
+    "hardwrap": true
   }
 }

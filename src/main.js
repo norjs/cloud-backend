@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
-/* Sendanor's cloud micro service backend runner */
+/** Sendanor's cloud micro service backend runner
+ * @module @sendanor/cloud-backend
+ */
 
 import {
 	_,

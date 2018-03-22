@@ -1,5 +1,5 @@
 /**
- * @module
+ * @module @sendanor/cloud-backend
  */
 
 import {
@@ -17,8 +17,11 @@ import BasicAuthRequestHandler from './auth/basic/BasicAuthRequestHandler.js';
 import BearerAuthRequestHandler from './auth/bearer/BearerAuthRequestHandler.js';
 import RequestService from './RequestService.js';
 
-/** Implements HTTP(S) request server */
-export default class ServerService {
+/** Implements HTTP(S) request server
+ *
+ * @static
+ */
+class ServerService {
 
 	/** Constructor */
 	constructor (MainService, RequestService, ServiceCache, LogService) {
@@ -253,3 +256,5 @@ export default class ServerService {
 	}
 
 }
+
+export default ServerService;
