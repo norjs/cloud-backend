@@ -10,7 +10,7 @@ it.
 
 ### Install
 
-`npm i -g @sendanor/cloud-backend`
+`npm install -g cloud-backend`
 
 ### Tutorial
 
