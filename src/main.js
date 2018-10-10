@@ -134,6 +134,16 @@ function getConfig (argv_) {
 			config[camelCaseKey.substr(0, camelCaseKey.length - 4)] = fs.sync.readFile(value, {encoding:'utf8'});
 		}
 
+		// --*Json
+		if (camelCaseKey.substr(-4, 4) === 'Json') {
+			config[camelCaseKey.substr(0, camelCaseKey.length - 4)] = JSON.parse(fs.sync.readFile(value, {encoding:'utf8'}));
+		}
+
+		// --*Require
+		if (camelCaseKey.substr('Require'.length * -1, 'Require'.length) === 'Require') {
+			config[camelCaseKey.substr(0, camelCaseKey.length - 'Require'.length)] = require(value);
+		}
+
 		// Other, directly
 		config[camelCaseKey] = value;
 	});
