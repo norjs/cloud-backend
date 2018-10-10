@@ -21,7 +21,7 @@ class BasicAuthRequestHandler {
 	$onConfig (config) {
 		this._config = _.get(config, 'auth.basic') || _.get(config, 'authBasic');
 
-		debug.log('config = ', this._config);
+		//debug.log('config = ', this._config);
 	}
 
 	/**
@@ -31,7 +31,7 @@ class BasicAuthRequestHandler {
 	 * @private
 	 */
 	$onRequest (req, res, next) {
-		debug.log('req.url =', req.url);
+		//debug.log('req.url =', req.url);
 
 		const config = _.cloneDeep(this._config);
 
@@ -63,12 +63,12 @@ class BasicAuthRequestHandler {
 		debug.assert(username).is('string');
 		debug.assert(password).is('string');
 
-		debug.log('unverifiedUser = ', username);
+		//debug.log('unverifiedUser = ', username);
 		req.unverifiedUser = username;
-		debug.log('unverifiedUser = ', req.unverifiedUser);
+		//debug.log('unverifiedUser = ', req.unverifiedUser);
 
-		console.log('Username: "' + username +'"');
-		console.log('Password: "' + password + '"');
+		//console.log('Username: "' + username +'"');
+		//console.log('Password: "' + password + '"');
 
 		const cred = _.find(config.credentials, cred => username === cred.username);
 		if (!cred) {
