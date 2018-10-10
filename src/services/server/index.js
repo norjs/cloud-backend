@@ -9,6 +9,7 @@ import BearerAuthRequestHandler from './auth/bearer/BearerAuthRequestHandler.js'
 
 export {
 	ServerService as default,
+	ServerService,
 	RequestService,
 	BasicAuthRequestHandler,
 	BearerAuthRequestHandler

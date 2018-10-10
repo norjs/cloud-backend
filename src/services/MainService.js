@@ -108,7 +108,8 @@ class MainService {
 			debug.assert(this._builtInServices).is('array');
 			debug.assert(this._userServices).is('array');
 
-			//debug.log('this._userServices = ', this._userServices);
+			debug.log('this._builtInServices = ', this._builtInServices);
+			debug.log('this._userServices = ', this._userServices);
 
 			const firstUserService = _.first(this._userServices);
 
@@ -116,7 +117,10 @@ class MainService {
 				() => Q.all(_.concat(
 
 					// Start up built in services
-					_.map(this._builtInServices, Service => this._serviceCache.register(Service)),
+					_.map(this._builtInServices, Service => {
+						debug.assert(Service).is('defined');
+						return this._serviceCache.register(Service);
+					}),
 
 					// Start up user defined services
 					_.map(this._userServices, Service => {
