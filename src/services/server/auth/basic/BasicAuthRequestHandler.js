@@ -55,7 +55,7 @@ class BasicAuthRequestHandler {
 		const auth = (new Buffer(authorization.substr('Basic '.length), 'base64')).toString();
 		debug.assert(auth).is('string');
 
-		console.log('Parsed: "' +auth + '"');
+		//console.log('Parsed: "' +auth + '"');
 
 		const authSplitted = auth.split(':');
 		const username = authSplitted.shift();
