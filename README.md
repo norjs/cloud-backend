@@ -33,13 +33,17 @@ export default class DateService {
 		this.date = new Date();
 	}
 
+	setTime (time) {
+		this.date = new Date();
+		this.date.setTime(time);
+	}
+
 }
 ```
 
 With this service instance, you can see the `date` property and you can call `.updateDate()`.
 
 Then we'll create another service which uses our `DateService`:
-
 
 ```javascript
 export default class TestDateService {
@@ -51,6 +55,11 @@ export default class TestDateService {
 	updateDate () {
 		return this._Date.updateDate();
 	}
+
+	setTime (time) {
+		return this._Date.setTime(time);
+	}
+
 
 }
 ```
@@ -77,7 +86,7 @@ $ cloud-backend ./dist/examples/DateService.js --protocol=http --auth=basic:demo
 Then we'll start our other service and connect to remote `DateService`:
 
 ```
-$ node ./dist/main.js http://demo:test@localhost:3000 ./dist/examples/TestDateService.js --port=3001 --protocol=http --listen=TestDateService
+$ cloud-backend http://demo:test@localhost:3000 ./dist/examples/TestDateService.js --port=3001 --protocol=http --listen=TestDateService
 2017-07-10T09:27:16+03:00 [ServiceCache] Registered ServiceCache with UUID 5aa563b0-584c-4338-9cb1-caae6efb081f
 2017-07-10T09:27:16+03:00 [ServiceCache] No service DateService for TestDateService. Waiting 1 s.
 2017-07-10T09:27:16+03:00 [ServiceCache] Registered DateService with UUID 2922feaa-0430-42bd-a11a-9d951931d068
@@ -158,6 +167,17 @@ $ curl http://demo:test@localhost:3000
 ```
 
 * Notice how `DateService` has a readable property `date`, but `TestDateService` does not have it.
+
+Some functions might require arguments:
+
+```
+$ curl -H "Content-Type: application/json" --data '{"$args":[1539446645624]}' -X POST http://localhost:3001/setTime
+{
+  "$ref": "http://localhost:3001/updateDate",
+  "$path": "payload",
+  "$type": "undefined"
+}
+```
 
 ### Different ways of running
 
