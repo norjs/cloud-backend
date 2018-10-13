@@ -56,17 +56,18 @@ class MainService {
 	}
 
 	/** Set the service cache
-	 * @param serviceCache {Object|Function} The service instance or service function
+	 * @param ServiceCache {Object|Function} The service instance or service
+	 * function
 	 * @returns {Object} Reference to itself for chaining
 	 */
 	setServiceCache (ServiceCache) {
 
-		if (is.function(ServiceCache)) {
+		if (_.isFunction(ServiceCache)) {
 			this._serviceCache = new ServiceCache();
 			return this;
 		}
 
-		if (is.object(ServiceCache)) {
+		if (_.isObject(ServiceCache)) {
 			this._serviceCache = ServiceCache;
 			return this;
 		}
@@ -82,7 +83,7 @@ class MainService {
 	 * @private
 	 */
 	_errorLog (...args) {
-		const f = this._log && is.function(this._log.error) ? this._log.error : debug.error;
+		const f = this._log && _.isFunction(this._log.error) ? this._log.error : debug.error;
 		f(...args);
 		return this;
 	}
@@ -94,7 +95,7 @@ class MainService {
 	 * @private
 	 */
 	_infoLog (...args) {
-		const f = this._log && is.function(this._log.error) ? this._log.info : debug.info;
+		const f = this._log && _.isFunction(this._log.error) ? this._log.info : debug.info;
 		f(...args);
 		return this;
 	}

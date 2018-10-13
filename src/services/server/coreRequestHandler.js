@@ -3,7 +3,6 @@
  */
 
 import _ from 'lodash';
-import is from 'nor-is';
 import Q from 'q';
 import debug from 'nor-debug';
 //import ref from 'nor-ref';
@@ -31,7 +30,7 @@ function jsonReply2 (content, counter) {
 			throw err;
 		}
 
-		if (!is.object(content)) {
+		if (!_.isObject(content)) {
 			throw err;
 		}
 
@@ -54,7 +53,7 @@ function jsonReply (content) {
 			throw err;
 		}
 
-		if (!is.object(content)) {
+		if (!_.isObject(content)) {
 			throw err;
 		}
 

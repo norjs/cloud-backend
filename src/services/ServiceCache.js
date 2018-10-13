@@ -3,13 +3,13 @@
  */
 
 import {
-	Q,
-	_,
-	is,
-	debug,
-	moment,
-	EventEmitter,
-	parseFunctionArgumentNames
+	Q
+	, _
+	, debug
+	, moment
+	, EventEmitter
+	, parseFunctionArgumentNames
+	, isUUID
 } from '../lib/index.js';
 
 import uuidv4 from 'uuid/v4';
@@ -101,9 +101,9 @@ class ServiceCache extends EventEmitter {
 	 * @private
 	 */
 	_exists (service_) {
-		if (is.function(service_)) return this._existsFunction(service_);
-		if (is.uuid(service_)) return this._existsUUID(service_);
-		if (is.string(service_)) return this._existsName(service_);
+		if (_.isFunction(service_)) return this._existsFunction(service_);
+		if (isUUID(service_)) return this._existsUUID(service_);
+		if (_.isString(service_)) return this._existsName(service_);
 	}
 
 	/** Returns service name by UUID
@@ -123,15 +123,15 @@ class ServiceCache extends EventEmitter {
 	 */
 	_getName (service) {
 
-		if (is.uuid(service)) {
+		if (isUUID(service)) {
 			return this._getNameById(service);
 		}
 
-		if (is.string(service)) {
+		if (_.isString(service)) {
 			return service;
 		}
 
-		if (is.function(service)) {
+		if (_.isFunction(service)) {
 			return _.get(service, 'constructor.name');
 		}
 
@@ -144,12 +144,12 @@ class ServiceCache extends EventEmitter {
 	 */
 	_getUUIDsForService (service) {
 
-		if (is.function(service)) {
+		if (_.isFunction(service)) {
 			service = _.get(service, 'constructor.name');
 		}
 
-		if (is.string(service)) {
-			if (is.uuid(service)) return [service];
+		if (_.isString(service)) {
+			if (isUUID(service)) return [service];
 			return _.map(_.filter(this._services, s => s.name === service), s => s.id);
 		}
 
@@ -394,11 +394,11 @@ class ServiceCache extends EventEmitter {
 	register (s) {
 		return Q.when(s).then(service => {
 
-			if (is.function(service)) {
+			if (_.isFunction(service)) {
 				return this._waitInjectedServices(service).then( () => this._registerFunction(service) );
 			}
 
-			if (is.array(service)) {
+			if (_.isArray(service)) {
 				let uuids = [];
 				return _.reduce(
 					_.map(service, s => () => this.register(s).then(uuid => uuids.push(uuid))),
@@ -407,7 +407,7 @@ class ServiceCache extends EventEmitter {
 				).then(() => uuids);
 			}
 
-			if (is.object(service)) {
+			if (_.isObject(service)) {
 				return this._registerInstance(service);
 			}
 
@@ -492,7 +492,7 @@ class ServiceCache extends EventEmitter {
 
 		const instance = serviceObj.instance;
 
-		if (instance && is.function(instance.$onConfig)) {
+		if (instance && _.isFunction(instance.$onConfig)) {
 			//debug.log('calling .$onConfig()... serviceObj = ', serviceObj);
 			return serviceObj.isConfiguring = Q.when(instance.$onConfig(config)).then(
 				() => {
@@ -585,7 +585,7 @@ class ServiceCache extends EventEmitter {
 
 				const instance = serviceObj.instance;
 
-				if (instance && is.function(instance.$onInit)) {
+				if (instance && _.isFunction(instance.$onInit)) {
 					return Q.when(instance.$onInit()).then(
 						() => {
 							serviceObj.isInit = true;
@@ -629,7 +629,7 @@ class ServiceCache extends EventEmitter {
 				// Ignore if already rund
 				if (serviceObj.isRun) return;
 
-				if (instance && is.function(instance.$onRun)) {
+				if (instance && _.isFunction(instance.$onRun)) {
 					return Q.when(instance.$onRun()).then(
 						() => {
 							serviceObj.isRun = true;

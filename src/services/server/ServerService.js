@@ -3,11 +3,11 @@
  */
 
 import {
-	Q,
-	_,
-	is,
-	debug,
-	EventEmitter
+	Q
+	, _
+	, debug
+	, EventEmitter
+	, isUUID
 } from '../../lib/index.js';
 
 import serviceRequestHandler from './serviceRequestHandler';
@@ -186,13 +186,13 @@ class ServerService {
 		return this._server = createServer(config, (req, res) => this._request.$onRequest(req, res)).then(() => {
 			const name = this._serviceName;
 			return Q.all([
-				Q.when(is.uuid(name) ? this._serviceCache.getNameById(name) : name),
+				Q.when(isUUID(name) ? this._serviceCache.getNameById(name) : name),
 				this._serviceCache.get(name)
 	        ]);
 		}).spread( (name, instance) => {
 			this._log.info('[ServerService] Service ' + name + ' started at port ' + (config.port||3000) + ' as ' + (config.protocol||'https') );
 
-			if (instance && is.function(instance.emit)) {
+			if (instance && _.isFunction(instance.emit)) {
 				return this._setupSocketIO(name, instance);
 			}
 		});

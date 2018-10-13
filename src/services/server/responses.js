@@ -4,7 +4,6 @@
 
 import _ from 'lodash';
 import debug from 'nor-debug';
-import is from 'nor-is';
 import ref from 'nor-ref';
 import { HTTPError } from 'nor-errors';
 import { createBodyIDs } from '@sendanor/cloud-common';
@@ -35,7 +34,7 @@ function prepareObjectPrototypeResponse (context, content, parent) {
 		//debug.log('type = ', type);
 		if (type && type.get) return false;
 		if (type && type.set) return false;
-		return is.func(content[key]);
+		return _.isFunction(content[key]);
 	});
 
 	//debug.log('parent [#2] = ', parent);
@@ -52,7 +51,7 @@ function prepareObjectPrototypeResponse (context, content, parent) {
 
 	let constructors = getConstructors(content);
 	if (constructors) {
-		if (!is.array(constructors)) {
+		if (!_.isArray(constructors)) {
 			constructors = [constructors];
 		}
 		if (_.last(constructors) === 'Object') {
@@ -96,10 +95,10 @@ function prepareObjectResponse (context, content) {
 	//debug.log('content [before] = ', content);
 
 	const properties = Object.getOwnPropertyNames(content).filter(notPrivate);
-	const methods = _.filter(properties, key => is.func(content[key]));
+	const methods = _.filter(properties, key => _.isFunction(content[key]));
 
 	const allProperties = getAllKeys(content).filter(notPrivate);
-	const members = _.filter(allProperties, key => !is.func(content[key]));
+	const members = _.filter(allProperties, key => !_.isFunction(content[key]));
 
 	//debug.log("content = ", content);
 	//debug.log("methods = ", methods);
@@ -177,7 +176,7 @@ function prepareFunctionResponse (context, f, ref) {
 /** */
 function prepareScalarResponse (context, content) {
 
-	if (is.function(content)) {
+	if (_.isFunction(content)) {
 		return prepareFunctionResponse(context, content);
 	}
 
@@ -204,10 +203,10 @@ function prepareResponse (context, content) {
 	if (content && (content instanceof Date)) {
 		return prepareScalarResponse(context, content);
 	}
-	if (is.array(content)) {
+	if (_.isArray(content)) {
 		return prepareScalarResponse(context, content);
 	}
-	if (is.object(content)) {
+	if (_.isObject(content)) {
 		return prepareObjectResponse(context, content);
 	}
 	return prepareScalarResponse(context, content);
@@ -225,7 +224,7 @@ function prepareErrorResponse (context, code, message, exception) {
 
 	const $type = 'error';
 
-	if (is.number(message) && is.string(code)) {
+	if (_.isNumber(message) && _.isString(code)) {
 		[message, code] = [code, message];
 	}
 

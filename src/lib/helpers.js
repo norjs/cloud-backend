@@ -4,7 +4,6 @@
 
 import _ from 'lodash';
 import debug from 'nor-debug';
-import is from 'nor-is';
 
 const reservedPropertyNames = [
 	'constructor',
@@ -52,7 +51,7 @@ function notPrivate (name) { return !isPrivate(name); }
  * @param name
  * @returns {boolean}
  */
-function isFunction (name) { return is.function(name); }
+function isFunction (name) { return _.isFunction(name); }
 
 /**
  *
@@ -60,6 +59,16 @@ function isFunction (name) { return is.function(name); }
  * @returns {boolean}
  */
 function notFunction (name) { return !isFunction(name); }
+
+/**
+ * Check if string is an UUID.
+ *
+ * @param id {string}
+ * @returns {boolean}
+ */
+function isUUID (id) {
+	return /^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$/.test(id);
+}
 
 /** Returns an array of all keys (own or not) of an object
  *
@@ -124,18 +133,19 @@ function parseFunctionArgumentNames (f) {
 
 	const result = str.match(ARGUMENT_NAMES);
 
-	if (!is.array(result)) return [];
+	if (!_.isArray(result)) return [];
 	return result;
 }
 
 // Exports
 export {
-	isReservedPropertyName,
-	isPrivate,
-	notPrivate,
-	isFunction,
-	notFunction,
-	getAllKeys,
-	getConstructors,
-	parseFunctionArgumentNames
+	isReservedPropertyName
+	, isPrivate
+	, notPrivate
+	, isFunction
+	, notFunction
+	, getAllKeys
+	, getConstructors
+	, parseFunctionArgumentNames
+	, isUUID
 }

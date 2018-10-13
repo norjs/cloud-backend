@@ -3,10 +3,19 @@
  */
 
 import Q from 'q';
-import is from 'nor-is';
 import resolve from 'resolve';
 import debug from 'nor-debug';
 import cloudClient from '@sendanor/cloud-client';
+
+/** Returns true if value is a string and looks like a URL (ftp://, http://
+ * or https://).
+ *
+ * @param obj
+ * @returns {boolean}
+ */
+function isURL (obj) {
+	return _.isString(obj) && /^(ftp|https?):\/\//.test(obj);
+}
 
 /** Get a Service class from a service name
  * @param name {String} The service module name based on CWD
@@ -22,7 +31,7 @@ function getServiceByRequire (name) {
 
 	// Support babel-generated ES6 "export default"
 
-	const Service = (is.object(Module) && is.func(Module.default)) ? Module.default : Module;
+	const Service = (_.isObject(Module) && _.isFunction(Module.default)) ? Module.default : Module;
 	debug.assert(Service).is('defined');
 
 	return Service;
@@ -45,7 +54,7 @@ function getServiceByURL (name) {
  */
 function _getServiceByName (name) {
 	debug.assert(name).is('string');
-	if (is.url(name)) return getServiceByURL(name);
+	if (isURL(name)) return getServiceByURL(name);
 	return getServiceByRequire(name);
 }
 

@@ -4,7 +4,6 @@
 
 import Q from 'q';
 import _ from 'lodash';
-import is from 'nor-is';
 import debug from 'nor-debug';
 import crypto from 'crypto';
 
@@ -186,7 +185,7 @@ class EmailAuthenticationService {
 	_isValidAddress (email) {
 
 		// Only strings are accepted
-		if (!is.string(email)) return false;
+		if (!_.isString(email)) return false;
 
 		// Only longer than five characters and less than 254 characters are accepted (a@b.c)
 		if (email.length < 5) return false;
@@ -397,7 +396,7 @@ class EmailAuthenticationService {
 	 */
 	_clear (apiKey) {
 
-		if (is.object(apiKey) && apiKey.apiKey) {
+		if (_.isObject(apiKey) && apiKey.apiKey) {
 			apiKey = apiKey.apiKey;
 		}
 
@@ -482,7 +481,7 @@ class EmailAuthenticationService {
 	 */
 	_unregisterCode (email) {
 
-		email = is.string(email && email.email) ? email.email : email;
+		email = _.isString(email && email.email) ? email.email : email;
 		this._assertEmail(email);
 
 		if (_.has(this._codes, email)) {

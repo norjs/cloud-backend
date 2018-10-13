@@ -5,22 +5,21 @@
  */
 
 import {
-	_,
-	is,
-	debug,
-	moment,
-	fs,
-	PATH,
-	getServiceByName
+	_
+	, debug
+	, moment
+	, fs
+	, PATH
+	, getServiceByName
 } from './lib/index.js';
 
 import {
-	MainService,
-	ServiceCache,
-	PromptService,
-	ServerService,
-	RequestService,
-	defaultServices
+	MainService
+	, ServiceCache
+	, PromptService
+	, ServerService
+	, RequestService
+	, defaultServices
 } from './services';
 
 import minimist from 'minimist';
@@ -97,7 +96,7 @@ function getConfig (argv_) {
 
 		// --auth
 		if (camelCaseKey === 'auth') {
-			value = is.array(value) ? value : [value];
+			value = _.isArray(value) ? value : [value];
 			debug.assert(value).is('array');
 			_.forEach(value, value_ => {
 				const parts = value_.split(':');
@@ -210,7 +209,7 @@ function main (argv) {
 		m => m.runServices()
 	).fail(err => {
 		const log = $main.getLog();
-		const f = log && is.function(log.error) ? log.error : debug.error;
+		const f = log && _.isFunction(log.error) ? log.error : debug.error;
 		f('Exception: ', err);
 	}).done();
 

@@ -5,7 +5,6 @@
 import {
 	Q,
 	_,
-	is,
 	debug,
 	getAllKeys,
 	notPrivate,
@@ -51,11 +50,11 @@ class PromptService {
 		debug.assert(config.prompt).ignore(undefined).is('defined');
 		const promptContext = config && config.prompt || null;
 
-		if (is.string(promptContext)) {
+		if (_.isString(promptContext)) {
 			return this._changeContext(promptContext);
 		}
 
-		return Q.when(this._main.getFirstServiceUUID()).then(id => is.string(id) && this._changeContext(id));
+		return Q.when(this._main.getFirstServiceUUID()).then(id => _.isString(id) && this._changeContext(id));
 	}
 
 	/** Initialize command line interface
@@ -173,18 +172,18 @@ class PromptService {
 
 			// Built-in commands
 			const method = 'on' + _.upperFirst(command);
-			if (is.function(this[method])) {
+			if (_.isFunction(this[method])) {
 				return Q.when(this[method](...argv));
 			}
 
 			// Custom commands
-			if (_.has(this._customCommands, command) && is.function(this._customCommands[command])) {
+			if (_.has(this._customCommands, command) && _.isFunction(this._customCommands[command])) {
 				return Q.when(this._customCommands[command](...argv));
 			}
 
 			// Context commands
 			const contextMethod = command;
-			if (is.function(this._context[contextMethod])) {
+			if (_.isFunction(this._context[contextMethod])) {
 				return Q.when(this._context[contextMethod](...argv));
 			}
 
@@ -278,9 +277,9 @@ class PromptService {
 	 * @private
 	 */
 	_getType (value) {
-		if (is.array(value)) return 'array';
-		if (is.object(value)) return _.get(value, 'constructor.name') || 'object';
-		if (is.null(value)) return 'null';
+		if (_.isArray(value)) return 'array';
+		if (_.isObject(value)) return _.get(value, 'constructor.name') || 'object';
+		if (_.isNull(value)) return 'null';
 		if (value === undefined) return 'undefined';
 
 		const type = typeof value;
@@ -350,7 +349,7 @@ class PromptService {
 	 */
 	_changeContext (name) {
 
-		if (is.object(name)) {
+		if (_.isObject(name)) {
 			this._contextPath = [name];
 			this._context = name;
 			return Q.all([
@@ -359,7 +358,7 @@ class PromptService {
 			]).then( () => {} );
 		}
 
-		if (is.string(name)) {
+		if (_.isString(name)) {
 			return this._ServiceCache.get(name).then( obj => this._changeContext(obj) );
 		}
 
@@ -373,7 +372,7 @@ class PromptService {
 	onEcho (...args) {
 		console.log( args.map(arg => {
 			if (arg === undefined) return 'undefined';
-			if (is.function(arg)) return 'Function';
+			if (_.isFunction(arg)) return 'Function';
 			return JSON.stringify(arg);
 		}).join(', ') );
 	}

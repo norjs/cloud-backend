@@ -7,7 +7,6 @@ import { HTTPError } from 'nor-errors';
 import {
 	Q,
 	_,
-	is,
 	debug,
 	isPrivate
 } from '../../lib/index.js';
@@ -107,7 +106,7 @@ function _getContent (context, content, parts) {
 	//debug.log('content = ', content);
 	//debug.log('content['+part+'] =', content[part]);
 
-	if (is.function(content[part])) {
+	if (_.isFunction(content[part])) {
 		const method = context.method;
 		//debug.log('method = ', method);
 
@@ -172,7 +171,7 @@ function ___serviceRequestHandler (content, req) {
  */
 function __serviceRequestHandler (serviceInstance, req) {
 	//debug.log('serviceInstance = ', serviceInstance);
-	if (is.array(serviceInstance)) {
+	if (_.isArray(serviceInstance)) {
 		serviceInstance = _.first(serviceInstance);
 	}
 	//debug.log('serviceInstance = ', serviceInstance);
