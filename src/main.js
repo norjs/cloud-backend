@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 
 /** Sendanor's cloud micro service backend runner
  * @module @sendanor/cloud-backend
@@ -74,13 +73,39 @@ function usage (argv) {
 		'',
 		'  Note! Unless you specify --listen, --port or --protocol, no ServerService is started.',
 		'',
+		'  You may also configure from JSON file by adding "-json" prefix to the param:',
+		'',
+		'    --auth-json=./service-auth.json -- Will set same as "--auth=JSON"',
+		'    --json=./service.json           -- Will set key-value pairs from this file as --KEY=VALUE',
+		'',
 	].join('\n'));
+}
+
+/**
+ * Read text file.
+ *
+ * @param name {string}
+ * @returns {string}
+ */
+function readFile (name) {
+	return fs.sync.readFile(name, {encoding:'utf8'});
+}
+
+/**
+ * Read JSON file.
+ *
+ * @param name {string}
+ * @returns {string}
+ */
+function readJsonFile (name) {
+	return JSON.parse(readFile(name));
 }
 
 /** Create configuration object
  * @param argv_ {Array.<String>} Array of command line arguments.
  */
 function getConfig (argv_) {
+
 	debug.assert(argv_).is('array');
 
 	const argv = minimist(argv_.slice(2));
@@ -130,12 +155,28 @@ function getConfig (argv_) {
 
 		// --*File
 		if (camelCaseKey.substr(-4, 4) === 'File') {
-			config[camelCaseKey.substr(0, camelCaseKey.length - 4)] = fs.sync.readFile(value, {encoding:'utf8'});
+			config[camelCaseKey.substr(0, camelCaseKey.length - 4)] = readFile(value);
+		}
+
+		// --json
+		if (camelCaseKey === 'json') {
+			const file = readJsonFile(value);
+			_.forEach(_.keys(file), key => {
+				config[key] = file[key];
+			});
 		}
 
 		// --*Json
 		if (camelCaseKey.substr(-4, 4) === 'Json') {
-			config[camelCaseKey.substr(0, camelCaseKey.length - 4)] = JSON.parse(fs.sync.readFile(value, {encoding:'utf8'}));
+			config[camelCaseKey.substr(0, camelCaseKey.length - 4)] = readJsonFile(value);
+		}
+
+		// --require
+		if (camelCaseKey === 'require') {
+			const file = require(value);
+			_.forEach(_.keys(file), key => {
+				config[key] = file[key];
+			});
 		}
 
 		// --*Require
@@ -177,7 +218,7 @@ function getConfig (argv_) {
 }
 
 /** The main function for cloud-backend command
- * @param argv_ {Array.<String>} Array of command line arguments.
+ * @param argv {Array.<String>} Array of command line arguments.
  */
 function main (argv) {
 	debug.assert(argv).is('array');

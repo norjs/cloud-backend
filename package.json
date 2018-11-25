@@ -1,10 +1,10 @@
 {
   "name": "cloud-backend",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "description": "Sendanor's Cloud Backend",
   "main": "dist/index.js",
   "bin": {
-    "cloud-backend": "dist/main.js"
+    "cloud-backend": "bin/main.sh"
   },
   "scripts": {
     "test": "mocha",

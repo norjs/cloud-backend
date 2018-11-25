@@ -2,6 +2,7 @@
  * @module @sendanor/cloud-backend
  */
 
+import _ from 'lodash';
 import Q from 'q';
 import resolve from 'resolve';
 import debug from 'nor-debug';
