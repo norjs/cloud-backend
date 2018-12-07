@@ -35,8 +35,8 @@
     "nyc": "^11.2.1"
   },
   "dependencies": {
-    "@sendanor/cloud-client": "^1.0.10",
-    "@sendanor/cloud-common": "^1.0.1",
+    "@norjs/cloud-client": "^1.0.10",
+    "@norjs/cloud-common": "^1.0.1",
     "apache-md5": "^1.1.2",
     "babel-polyfill": "^6.26.0",
     "globals": "^10.0.0",

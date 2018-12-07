@@ -1,12 +1,12 @@
-Sendanor Cloud Backend
-----------------------
+NorJS Cloud Backend
+-------------------
 
-This is a CLI application to run Sendanor's Cloud Service Framework.
+This is a CLI application to run NorJS's Cloud Service Framework.
 
 This application is still in active development and probably has few bugs in it. 
 
-Please submit [issues](https://github.com/sendanor/cloud-backend/issues) and we'll look at 
-it.
+Please submit [issues](https://github.com/norjs/cloud-backend/issues) and we'll 
+look at it.
 
 ### Install
 
