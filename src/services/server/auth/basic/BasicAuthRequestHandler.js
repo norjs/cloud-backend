@@ -45,7 +45,7 @@ class BasicAuthRequestHandler {
 		}
 
 		const authorization = _.get(req, 'headers.authorization');
-		if (!authorization) return _notOk(req, res);
+		if (!authorization) return this._notOk(req, res);
 		debug.assert(authorization).is('string');
 
 		if (authorization.substr(0, 'Basic '.length).toLowerCase() !== 'basic ') {
@@ -104,6 +104,7 @@ class BasicAuthRequestHandler {
 		res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
 		throw new HTTPError(401);
 	}
+
 }
 
 export default BasicAuthRequestHandler
