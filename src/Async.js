@@ -1,11 +1,13 @@
 import _ from 'lodash';
+import { Promise } from 'es6-promise';
 
 /**
  *
  * @type {{Promise: (function(*=): *)}}
  */
 export let Async = {
-	Promise: Promise
+	Promise: (...args) => new Promise(...args)
+	, all: (...args) => Promise.all(...args)
 };
 
 /**
@@ -60,16 +62,6 @@ export function promiseDone (promise) {
 	}
 }
 
-/**
- * Call .done on promise if it exists.
- *
- * @param promises {Array.<Promise>}
- */
-export function promiseAll (promises) {
-	return Async.Promise.all(promises);
-}
-
-Async.all = promiseAll;
 Async.reject = promiseReject;
 Async.resolve = promiseResolve;
 Async.fcall = promiseCall;
