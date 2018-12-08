@@ -3,7 +3,7 @@
  */
 
 import {
-	Q,
+	Async,
 	_,
 	debug
 } from '../../lib/index.js';
@@ -57,7 +57,7 @@ class RequestService {
 	 * @returns {Promise.<Object>} Reference to itself for chaining.
 	 */
 	register (service) {
-		return Q.fcall( () => this._register(service) );
+		return Async.fcall( () => this._register(service) );
 	}
 
 	/** Unregister a service
@@ -65,7 +65,7 @@ class RequestService {
 	 * @returns {Promise.<Object>} Reference to itself for chaining.
 	 */
 	unregister (service) {
-		return Q.fcall( () => this._unregister(service) );
+		return Async.fcall( () => this._unregister(service) );
 	}
 
 	/** Builds a single request handler function from multiple request handlers

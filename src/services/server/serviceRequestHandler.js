@@ -5,7 +5,7 @@
 import { HTTPError } from 'nor-errors';
 
 import {
-	Q,
+	Async,
 	_,
 	debug,
 	isPrivate
@@ -57,11 +57,9 @@ function _parseJson (body) {
  */
 function _getContentFunctionCall (context, content, part, parts, body) {
 	body = _parseJson(body);
-	//debug.log('body = ', body);
 	const args = (body && body.$args) || [];
 	debug.assert(args).is('array');
-	//debug.log('args = ', args);
-	return Q.when(content[part](...args)).then(reply => {
+	return Async.resolve(content[part](...args)).then(reply => {
 		//debug.log('reply = ', reply);
 		//debug.log('parts = ', parts);
 
@@ -157,7 +155,7 @@ function __serviceRequestParseSubContent (context, subContent) {
 function ___serviceRequestHandler (content, req) {
 	const context = createContext(req);
 	const parts = _splitURL(context.url);
-	return Q.when(_getContent(context, content, parts)).then(
+	return Async.resolve(_getContent(context, content, parts)).then(
 		subContent => __serviceRequestParseSubContent(context, subContent)
 	);
 }
@@ -176,7 +174,7 @@ function __serviceRequestHandler (serviceInstance, req) {
 	}
 	//debug.log('serviceInstance = ', serviceInstance);
 	debug.assert(serviceInstance).is('defined');
-	return Q.fcall( () => ___serviceRequestHandler(serviceInstance, req));
+	return Async.fcall( () => ___serviceRequestHandler(serviceInstance, req));
 }
 
 /**
@@ -187,7 +185,7 @@ function __serviceRequestHandler (serviceInstance, req) {
  * @private
  */
 function _serviceRequestHandler (serviceName, getInstance, req) {
-	return Q.when(getInstance(serviceName)).then(
+	return Async.resolve(getInstance(serviceName)).then(
 		serviceInstance => __serviceRequestHandler(serviceInstance, req)
 	);
 }

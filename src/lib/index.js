@@ -1,9 +1,9 @@
 /**
- * @module @sendanor/cloud-backend
+ * @module @norjs/cloud-backend
  */
 
 // Dependencies
-import Q from 'q';
+import Async from '../Async.js';
 import _ from 'lodash';
 import debug from 'nor-debug';
 import moment from 'moment';
@@ -34,7 +34,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = !isProduction;
 
 export {
-	Q
+	Async
 	, _
 	, debug
 	, moment

@@ -3,7 +3,7 @@
  */
 
 import {
-	Q
+	Async
 	, _
 	, debug
 	, EventEmitter
@@ -68,7 +68,7 @@ class ServerService {
 	 * @private
 	 */
 	$onConfig (config) {
-		return Q.fcall( () => {
+		return Async.fcall( () => {
 			debug.assert(config).is('object');
 
 			if (!_.has(config, 'listen')) return;
@@ -104,7 +104,7 @@ class ServerService {
 				);
 			}
 
-			return Q.all(promises);
+			return Async.all(promises);
 
 		}).then( () => {
 
@@ -114,7 +114,7 @@ class ServerService {
 			this._serviceName = config.listen;
 
 			if ( (!this._serviceName) || (config.listen === true) ) {
-				return Q.when(this._main.getFirstServiceUUID()).then(id => this._serviceName = id);
+				return Async.resolve(this._main.getFirstServiceUUID()).then(id => this._serviceName = id);
 			}
 
 			return this._serviceName;
@@ -172,7 +172,7 @@ class ServerService {
 				);
 			}
 
-			return _.reduce(handlers, (a, b) => a.then(b), Q());
+			return _.reduce(handlers, (a, b) => a.then(b), Async.resolve());
 		});
 
 	}
@@ -185,8 +185,8 @@ class ServerService {
 		const config = this._config;
 		return this._server = createServer(config, (req, res) => this._request.$onRequest(req, res)).then(() => {
 			const name = this._serviceName;
-			return Q.all([
-				Q.when(isUUID(name) ? this._serviceCache.getNameById(name) : name),
+			return Async.all([
+				Async.resolve(isUUID(name) ? this._serviceCache.getNameById(name) : name),
 				this._serviceCache.get(name)
 	        ]);
 		}).spread( (name, instance) => {
@@ -216,9 +216,9 @@ class ServerService {
 
 		instance.emit = (...args) => {
 
-			Q.all(_.map(remoteEmitters, emit => {
+			Async.all(_.map(remoteEmitters, emit => {
 				debug.assert(emit).is('function');
-				return Q.when(emit(...args)).catch(
+				return Async.resolve(emit(...args)).catch(
 					err => this._log.error('[Socket.io] Error in '+name+'.emit() while emitting outside: ' + err)
 				);
 			})).catch(

@@ -3,7 +3,7 @@
  */
 
 import {
-	Q,
+	Async,
 	_,
 	is,
 	debug
@@ -104,7 +104,7 @@ class MainService {
 	 * @returns {Promise} Reference to itself, for chaining.
 	 */
 	loadServices () {
-		return Q.fcall( () => {
+		return Async.fcall( () => {
 
 			debug.assert(this._builtInServices).is('array');
 			debug.assert(this._userServices).is('array');
@@ -115,7 +115,7 @@ class MainService {
 			const firstUserService = _.first(this._userServices);
 
 			return this._serviceCache.register([this._serviceCache, this]).then(
-				() => Q.all(_.concat(
+				() => Async.all(_.concat(
 
 					// Start up built in services
 					_.map(this._builtInServices, Service => {
@@ -135,13 +135,13 @@ class MainService {
 					})
 				))
 			).then(
-				() => Q.all([
+				() => Async.all([
 					this._serviceCache.get('LogService').then(logService => this._log = logService)
 					//this._serviceCache.get('RequestService').then(requestService => this._request = requestService)
 				])
 			).then(() => this._infoLog('[main] All services created.'))
 
-		}).fail(
+		}).catch(
 			err => this._errorLog('Failed to create some services: ' + ((err && err.message) || ''+err) )
 		);
 	}
@@ -152,9 +152,9 @@ class MainService {
 	configServices (config) {
 		return this._serviceCache.configAll(config).then(
 			() => this._infoLog('[main] All services configured.')
-		).fail(err => {
+		).catch(err => {
 			this._errorLog('Failed to configure some services: ' + ((err && err.message) || ''+err));
-			return Q.reject(err);
+			return Async.reject(err);
 		});
 	}
 
@@ -162,9 +162,9 @@ class MainService {
 	initServices () {
 		return this._serviceCache.initAll().then(
 			() => this._infoLog('[main] All services initialized.')
-		).fail(err => {
+		).catch(err => {
 			this._errorLog('Failed to initialize some services: ' + ((err && err.message) || ''+err));
-			return Q.reject(err);
+			return Async.reject(err);
 		});
 	}
 
@@ -174,9 +174,9 @@ class MainService {
 	runServices () {
 		return this._serviceCache.runAll().then(
 			() => this._infoLog('[main] All services running.')
-		).fail(err => {
+		).catch(err => {
 			this._errorLog('Failed to call run on some services: ' + ((err && err.message) || ''+err));
-			return Q.reject(err);
+			return Async.reject(err);
 		});
 	}
 

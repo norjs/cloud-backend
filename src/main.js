@@ -1,6 +1,6 @@
 
-/** Sendanor's cloud micro service backend runner
- * @module @sendanor/cloud-backend
+/** NorJS Cloud Micro service backend runner
+ * @module @norjs/cloud-backend
  */
 
 import {
@@ -239,7 +239,7 @@ function main (argv) {
 
 	const $main = new MainService();
 
-	$main.setServiceCache(ServiceCache)
+	Async.done($main.setServiceCache(ServiceCache)
 	     .setBuiltInServices(config.builtInServices)
 	     .setUserServices(config.userServices)
 	     .loadServices().then(
@@ -248,11 +248,11 @@ function main (argv) {
 		m => m.initServices()
 	).then(
 		m => m.runServices()
-	).fail(err => {
+	).catch(err => {
 		const log = $main.getLog();
 		const f = log && _.isFunction(log.error) ? log.error : debug.error;
 		f('Exception: ', err);
-	}).done();
+	}));
 
 } // main
 
