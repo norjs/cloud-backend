@@ -3,7 +3,7 @@
  */
 
 import _ from 'lodash';
-import Q from 'q';
+import Async from '../Async.js';
 import resolve from 'resolve';
 import debug from 'nor-debug';
 import cloudClient from '@norjs/cloud-client';
@@ -64,7 +64,7 @@ function _getServiceByName (name) {
  * @returns {Function} The class for specific service
  */
 function getServiceByName (name) {
-	return Q.fcall(() => _getServiceByName(name));
+	return Async.fcall(() => _getServiceByName(name));
 }
 
 // Exports

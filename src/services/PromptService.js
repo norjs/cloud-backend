@@ -1,9 +1,9 @@
 /**
- * @module @sendanor/cloud-backend
+ * @module @norjs/cloud-backend
  */
 
 import {
-	Q,
+	Async,
 	_,
 	debug,
 	getAllKeys,
@@ -54,7 +54,7 @@ class PromptService {
 			return this._changeContext(promptContext);
 		}
 
-		return Q.when(this._main.getFirstServiceUUID()).then(id => _.isString(id) && this._changeContext(id));
+		return Async.resolve(this._main.getFirstServiceUUID()).then(id => _.isString(id) && this._changeContext(id));
 	}
 
 	/** Initialize command line interface
@@ -73,7 +73,7 @@ class PromptService {
 		});
 
 		this._rl.on('line',
-			line => Q.when(this._onLine(line)).fail(err => this._onError(err)).then( () => this._runPrompt() ).fail(err => this._onError(err)).done()
+			line => Async.done(Async.resolve(this._onLine(line)).catch(err => this._onError(err)).then( () => this._runPrompt() ).catch(err => this._onError(err)))
 		);
 
 		this._customCommands = {};
@@ -157,7 +157,7 @@ class PromptService {
 	 * @private
 	 */
 	_onLine (line) {
-		return Q.fcall( () => {
+		return Async.fcall( () => {
 
 			const argv = parsePrompt(line);
 
@@ -173,18 +173,18 @@ class PromptService {
 			// Built-in commands
 			const method = 'on' + _.upperFirst(command);
 			if (_.isFunction(this[method])) {
-				return Q.when(this[method](...argv));
+				return Async.resolve(this[method](...argv));
 			}
 
 			// Custom commands
 			if (_.has(this._customCommands, command) && _.isFunction(this._customCommands[command])) {
-				return Q.when(this._customCommands[command](...argv));
+				return Async.resolve(this._customCommands[command](...argv));
 			}
 
 			// Context commands
 			const contextMethod = command;
 			if (_.isFunction(this._context[contextMethod])) {
-				return Q.when(this._context[contextMethod](...argv));
+				return Async.resolve(this._context[contextMethod](...argv));
 			}
 
 			// Unknown commands
@@ -246,7 +246,7 @@ class PromptService {
 	_updateServiceCache () {
 		let newData = {};
 		return this._ServiceCache.getUUIDs().then(
-			uuids => Q.all(_.map(uuids,
+			uuids => Async.all(_.map(uuids,
 				uuid =>  this._ServiceCache.get(uuid).then(service => newData[uuid] = service)
 			))
 		).then(() => this._services = newData);
@@ -352,9 +352,9 @@ class PromptService {
 		if (_.isObject(name)) {
 			this._contextPath = [name];
 			this._context = name;
-			return Q.all([
-				Q.when(this._updatePrompt()),
-				Q.when(this._updateCommands())
+			return Async.all([
+				Async.resolve(this._updatePrompt()),
+				Async.resolve(this._updateCommands())
 			]).then( () => {} );
 		}
 

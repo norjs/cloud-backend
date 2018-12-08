@@ -3,7 +3,7 @@
  */
 
 import {
-	Q
+	Async
 	, _
 	, debug
 	, moment
@@ -162,7 +162,7 @@ class ServiceCache extends EventEmitter {
 	 * @private
 	 */
 	_waitInjectedServices (service) {
-		return Q.Promise((resolve, reject) => {
+		return Async.Promise((resolve, reject) => {
 
 			debug.assert(service).is('function');
 
@@ -189,7 +189,7 @@ class ServiceCache extends EventEmitter {
 			};
 
 			const testLoop = () => {
-				Q.fcall(() => {
+				Async.done(Async.fcall(() => {
 					//debug.log('Looping... args =', args);
 
 					clearTimer();
@@ -224,11 +224,11 @@ class ServiceCache extends EventEmitter {
 						throw new Error("Some dependencies for "+name+" failed to start: " + missingServices.join(', ') );
 					}
 
-				}).fail(err => {
+				}).catch(err => {
 					clearTimer();
 					//debug.error(err);
 					reject(err);
-				}).done();
+				}));
 			};
 
 			testLoop();
@@ -392,7 +392,7 @@ class ServiceCache extends EventEmitter {
 	 * @returns {Promise.<String|Array.<String>>} The UUID of the registered service, or an array of UUIDs if the argument was an array.
 	 */
 	register (s) {
-		return Q.when(s).then(service => {
+		return Async.resolve(s).then(service => {
 
 			if (_.isFunction(service)) {
 				return this._waitInjectedServices(service).then( () => this._registerFunction(service) );
@@ -403,7 +403,7 @@ class ServiceCache extends EventEmitter {
 				return _.reduce(
 					_.map(service, s => () => this.register(s).then(uuid => uuids.push(uuid))),
 					(a, b) => a.then(b),
-					Q()
+					Async.resolve()
 				).then(() => uuids);
 			}
 
@@ -422,7 +422,7 @@ class ServiceCache extends EventEmitter {
 	 * this service instance, for chaining.
 	 */
 	unregister (service) {
-		return Q.fcall(() => this._unregister(service));
+		return Async.fcall(() => this._unregister(service));
 	}
 
 	/** Register and load a new service
@@ -440,7 +440,7 @@ class ServiceCache extends EventEmitter {
 	 * @returns {Promise.<String|undefined>} The name of the service, otherwise undefined.
 	 */
 	getNameById (serviceId) {
-		return Q.fcall(() => this._getNameById(serviceId));
+		return Async.fcall(() => this._getNameById(serviceId));
 	}
 
 	/** Returns a single service instance by UUID, name or Function, asynchronously.
@@ -450,7 +450,7 @@ class ServiceCache extends EventEmitter {
 	 * @rejects {Error} If multiple services available ("Multiple services found for ...")
 	 */
 	get (service) {
-		return Q.fcall(() => this._get(service));
+		return Async.fcall(() => this._get(service));
 	}
 
 	/** Returns service instances by UUID, name or Function
@@ -459,7 +459,7 @@ class ServiceCache extends EventEmitter {
 	 * @rejects {Error} An error with message "Service not found: ..." if no services found
 	 */
 	getAll (service) {
-		return Q.fcall(() => this._getAll(service));
+		return Async.fcall(() => this._getAll(service));
 	}
 
 	/** Returns a list of registered service UUIDs
@@ -474,7 +474,7 @@ class ServiceCache extends EventEmitter {
 	 * @returns {Array.<String>} An array of UUID strings
 	 */
 	getUUIDs () {
-		return Q.fcall(() => this._getUUIDs());
+		return Async.fcall(() => this._getUUIDs());
 	}
 
 	/** Configure a internal service object
@@ -487,14 +487,14 @@ class ServiceCache extends EventEmitter {
 		debug.assert(serviceObj).is('object');
 
 		// Ignore if already configured
-		if (serviceObj.isConfig) return Q.resolve();
-		if (serviceObj.isConfiguring) return Q.when(serviceObj.isConfiguring);
+		if (serviceObj.isConfig) return Async.resolve();
+		if (serviceObj.isConfiguring) return Async.resolve(serviceObj.isConfiguring);
 
 		const instance = serviceObj.instance;
 
 		if (instance && _.isFunction(instance.$onConfig)) {
 			//debug.log('calling .$onConfig()... serviceObj = ', serviceObj);
-			return serviceObj.isConfiguring = Q.when(instance.$onConfig(config)).then(
+			return serviceObj.isConfiguring = Async.resolve(instance.$onConfig(config)).then(
 				() => {
 					serviceObj.isConfig = true;
 					serviceObj.isConfiguring = undefined;
@@ -506,7 +506,7 @@ class ServiceCache extends EventEmitter {
 		serviceObj.isConfig = true;
 		console.log(moment().format() + ' [ServiceCache] Configured ' + serviceObj.name + ' with UUID ' + serviceObj.id);
 
-		return Q.resolve();
+		return Async.resolve();
 	}
 
 	/** Configure service(s) by calling .$onConfig(config) on them. The service will only be configured if it it was unconfigured.
@@ -515,10 +515,10 @@ class ServiceCache extends EventEmitter {
 	 * @returns {Promise.<undefined>}
 	 */
 	config (service, config) {
-		return Q.fcall( () => {
+		return Async.fcall( () => {
 			debug.assert(config).is('object');
 			const uuids = this._getUUIDsForService(service);
-			return Q.all(_.map(uuids, uuid => Q.fcall( () => {
+			return Async.all(_.map(uuids, uuid => Async.fcall( () => {
 				const serviceObj = this._services[uuid];
 				return this._config(serviceObj, config);
 			})));
@@ -530,11 +530,11 @@ class ServiceCache extends EventEmitter {
 	 * @returns {Promise.<undefined>}
 	 */
 	configAll (config) {
-		return Q.fcall(() => {
+		return Async.fcall(() => {
 			debug.assert(config).is('object');
 
 			// Configure services which are unconfigured
-			return Q.all(
+			return Async.all(
 				_.map(
 					_.filter(
 						_.map(
@@ -570,9 +570,9 @@ class ServiceCache extends EventEmitter {
 	 * @returns {Promise}
 	 */
 	init (service) {
-		return Q.fcall( () => {
+		return Async.fcall( () => {
 			const uuids = this._getUUIDsForService(service);
-			return Q.all(_.map(uuids, uuid => Q.fcall( () => {
+			return Async.all(_.map(uuids, uuid => Async.fcall( () => {
 
 				const serviceObj = this._services[uuid];
 
@@ -586,7 +586,7 @@ class ServiceCache extends EventEmitter {
 				const instance = serviceObj.instance;
 
 				if (instance && _.isFunction(instance.$onInit)) {
-					return Q.when(instance.$onInit()).then(
+					return Async.resolve(instance.$onInit()).then(
 						() => {
 							serviceObj.isInit = true;
 							console.log(moment().format() + ' [ServiceCache] Inititialized ' + serviceObj.name + ' with UUID ' + serviceObj.id);
@@ -605,9 +605,9 @@ class ServiceCache extends EventEmitter {
 	 * @returns {Promise}
 	 */
 	initAll () {
-		return Q.fcall(() => {
+		return Async.fcall(() => {
 			const uuids = this._getUUIDs();
-			return Q.all(_.map(uuids, uuid => this.init(uuid) ));
+			return Async.all(_.map(uuids, uuid => this.init(uuid) ));
 		}).then( () => {} );
 	}
 
@@ -616,9 +616,9 @@ class ServiceCache extends EventEmitter {
 	 * @returns {Promise}
 	 */
 	run (service) {
-		return Q.fcall( () => {
+		return Async.fcall( () => {
 			const uuids = this._getUUIDsForService(service);
-			return Q.all(_.map(uuids, uuid => Q.fcall( () => {
+			return Async.all(_.map(uuids, uuid => Async.fcall( () => {
 
 				const serviceObj = this._services[uuid];
 
@@ -630,7 +630,7 @@ class ServiceCache extends EventEmitter {
 				if (serviceObj.isRun) return;
 
 				if (instance && _.isFunction(instance.$onRun)) {
-					return Q.when(instance.$onRun()).then(
+					return Async.resolve(instance.$onRun()).then(
 						() => {
 							serviceObj.isRun = true;
 							console.log(moment().format() + ' [ServiceCache] Service ' + serviceObj.name + ' running with UUID ' + serviceObj.id);
@@ -649,9 +649,9 @@ class ServiceCache extends EventEmitter {
 	 * @returns {Promise}
 	 */
 	runAll () {
-		return Q.fcall(() => {
+		return Async.fcall(() => {
 			const uuids = this._getUUIDs();
-			return Q.all(_.map(uuids, uuid => this.run(uuid) ));
+			return Async.all(_.map(uuids, uuid => this.run(uuid) ));
 		}).then( () => {} );
 	}
 

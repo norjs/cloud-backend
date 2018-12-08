@@ -3,7 +3,7 @@
  */
 
 import _ from 'lodash';
-import Q from 'q';
+import Async from '../../Async.js';
 import debug from 'nor-debug';
 //import ref from 'nor-ref';
 import { HTTPError } from 'nor-errors';
@@ -86,7 +86,7 @@ function reply (context, res, body, status=200) {
 }
 
 function setTimeoutPromise (f, time) {
-	return Q.Promise( resolve => setTimeout(() => resolve(Q.fcall(f)), time) );
+	return Async.Promise( resolve => setTimeout(() => resolve(Async.fcall(f)), time) );
 }
 
 /**
@@ -169,7 +169,7 @@ function _coreRequestHandlerWithoutErrorHandling (req, res, next) {
 	debug.assert(res).is('object');
 	debug.assert(_.get(res, 'constructor.name')).is('string').equals('ServerResponse');
 
-	return Q.fcall( () => next() ).then(body => _coreRequestResponseHandler(req, res, body, next));
+	return Async.fcall( () => next() ).then(body => _coreRequestResponseHandler(req, res, body, next));
 }
 
 /**
@@ -224,12 +224,12 @@ function coreRequestHandler (req, res, next) {
 	res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,prefer,if-none-match');
 	res.setHeader('Access-Control-Allow-Credentials', true);
 
-	return Q.fcall(
+	return Async.fcall(
 		() => _coreRequestHandlerWithoutErrorHandling(req, res, next)
-	).fail(err => {
+	).catch(err => {
 		console.log('err =', JSON.stringify(err));
 		return _standardErrorHandler(err, context, res);
-	}).fail(unexpectedErrorHandler);
+	}).catch(unexpectedErrorHandler);
 }
 
 export default coreRequestHandler;

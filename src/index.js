@@ -3,5 +3,5 @@
  * @module @sendanor/cloud-backend
  */
 
-export * from './lib/index';
-export * from './services/index';
+export * from './lib/index.js';
+export * from './services/index.js';

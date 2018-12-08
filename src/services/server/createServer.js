@@ -2,7 +2,7 @@
  * @module @sendanor/cloud-backend
  */
 
-import Q from 'q';
+import Async from '../../Async.js';
 import https from 'https';
 import http from 'http';
 import debug from 'nor-debug';
@@ -50,27 +50,27 @@ const createServer = (config, requestHandler) => {
 
 	const server = createServerByProtocol[protocol](config, requestHandler).listen(port);
 
-	const defer = Q.defer();
+	return Async.Promise( (resolve, reject) => {
+		let listeningHandler;
 
-	let listeningHandler;
+		const errorHandler = err => {
+			debug.error('Server Error: ', err);
+			server.removeListener('listening', listeningHandler);
+			server.close(() => reject(err));
+		};
 
-	const errorHandler = err => {
-		debug.error('Server Error: ', err);
-		server.removeListener('listening', listeningHandler);
-		server.close(() => defer.reject(err));
-	};
+		listeningHandler = () => {
+			server.removeListener('error', errorHandler);
+			resolve(server);
+		};
 
-	listeningHandler = () => {
-		server.removeListener('error', errorHandler);
-		defer.resolve(server);
-	};
+		server.once('error', errorHandler);
+		server.once('listening', listeningHandler);
 
-	server.once('error', errorHandler);
-	server.once('listening', listeningHandler);
+		server.on('error', err => _errorLogger(err, 'Server Error:') );
 
-	server.on('error', err => _errorLogger(err, 'Server Error:') );
+	});
 
-	return defer.promise;
 };
 
 export default createServer;

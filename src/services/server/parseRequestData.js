@@ -1,8 +1,8 @@
 /**
- * @module @sendanor/cloud-backend
+ * @module @norjs/cloud-backend
  */
 
-import Q from 'q';
+import Async from '../../Async.js';
 
 /**
  *
@@ -70,7 +70,7 @@ function _parseRequestData (req, resolve, reject) {
 
 /** */
 function parseRequestData (req) {
-	return Q.Promise((resolve, reject) => _parseRequestData(req, resolve, reject));
+	return Async.Promise((resolve, reject) => _parseRequestData(req, resolve, reject));
 }
 
 export default parseRequestData;
