@@ -1,12 +1,12 @@
 /**
- * @module @sendanor/cloud-backend
+ * @module @norjs/cloud-backend
  */
 
 import _ from 'lodash';
 import Q from 'q';
 import resolve from 'resolve';
 import debug from 'nor-debug';
-import cloudClient from '@sendanor/cloud-client';
+import cloudClient from '@norjs/cloud-client';
 
 /** Returns true if value is a string and looks like a URL (ftp://, http://
  * or https://).

@@ -45,14 +45,14 @@ class BasicAuthRequestHandler {
 		}
 
 		const authorization = _.get(req, 'headers.authorization');
-		if (!authorization) return _notOk(req, res);
+		if (!authorization) return this._notOk(req, res);
 		debug.assert(authorization).is('string');
 
 		if (authorization.substr(0, 'Basic '.length).toLowerCase() !== 'basic ') {
 			throw new TypeError("Not supported authorization type: " + authorization.split(' ')[0]);
 		}
 
-		const auth = (new Buffer(authorization.substr('Basic '.length), 'base64')).toString();
+		const auth = (Buffer.from(authorization.substr('Basic '.length), 'base64')).toString();
 		debug.assert(auth).is('string');
 
 		//console.log('Parsed: "' +auth + '"');
@@ -104,6 +104,7 @@ class BasicAuthRequestHandler {
 		res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
 		throw new HTTPError(401);
 	}
+
 }
 
 export default BasicAuthRequestHandler

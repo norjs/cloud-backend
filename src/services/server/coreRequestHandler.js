@@ -1,5 +1,5 @@
 /**
- * @module @sendanor/cloud-backend
+ * @module @norjs/cloud-backend
  */
 
 import _ from 'lodash';
@@ -7,7 +7,7 @@ import Q from 'q';
 import debug from 'nor-debug';
 //import ref from 'nor-ref';
 import { HTTPError } from 'nor-errors';
-import { createBodyIDs } from '@sendanor/cloud-common';
+import { createBodyIDs } from '@norjs/cloud-common';
 import moment from 'moment';
 import querystring from 'querystring';
 
