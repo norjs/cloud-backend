@@ -12,7 +12,10 @@
     "compile-examples": "babel examples --out-dir dist/examples --presets=es2015",
     "compile-watch": "babel --watch src --out-dir dist --presets=es2015",
     "compile-docs": "jsdoc --verbose --pedantic -c jsdoc.json",
-    "prepublish": "npm run compile"
+    "prepare": "npm run -s compile",
+    "pretest": "npm run -s compile",
+    "preversion": "npm test",
+    "postversion": "git push && git push --tags"
   },
   "repository": {
     "type": "git",
