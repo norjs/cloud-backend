@@ -109,8 +109,8 @@ class MainService {
 			debug.assert(this._builtInServices).is('array');
 			debug.assert(this._userServices).is('array');
 
-			debug.log('this._builtInServices = ', this._builtInServices);
-			debug.log('this._userServices = ', this._userServices);
+			//debug.log('this._builtInServices = ', this._builtInServices);
+			//debug.log('this._userServices = ', this._userServices);
 
 			const firstUserService = _.first(this._userServices);
 
