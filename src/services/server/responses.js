@@ -288,6 +288,9 @@ function _ref (basePath, req, url) {
 
 const NS_PER_SEC = 1e9;
 
+/**
+ * Cloud-backend context object.
+ */
 class Context {
 
 	constructor (req) {
@@ -300,6 +303,15 @@ class Context {
 		this.unverifiedUser = req.unverifiedUser;
 		this.user = req.user;
 		this.time = null;
+	}
+
+	/**
+	 * NodeJS request object.
+	 *
+	 * @returns {*}
+	 */
+	get request () {
+		return this.req;
 	}
 
 	$getIdentity () { return _getIdentity(this.req, this.commonName); }

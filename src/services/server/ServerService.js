@@ -174,7 +174,6 @@ class ServerService {
 
 			return _.reduce(handlers, (a, b) => a.then(b), Async.resolve());
 		});
-
 	}
 
 	/**

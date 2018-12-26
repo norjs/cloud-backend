@@ -4,6 +4,7 @@
 
 // Dependencies
 import Async from '../Async.js';
+import symbols from './symbols.js';
 import _ from 'lodash';
 import debug from 'nor-debug';
 import moment from 'moment';
@@ -35,6 +36,7 @@ const isDevelopment = !isProduction;
 
 export {
 	Async
+	, symbols
 	, _
 	, debug
 	, moment

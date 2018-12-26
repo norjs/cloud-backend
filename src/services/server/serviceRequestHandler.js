@@ -7,6 +7,7 @@ import { HTTPError } from 'nor-errors';
 import {
 	Async,
 	_,
+	symbols,
 	debug,
 	isPrivate
 } from '../../lib/index.js';
@@ -83,13 +84,38 @@ function _getContentFunctionCall (context, content, part, parts, body) {
 function _getContent (context, content, parts) {
 	debug.assert(parts).is('array');
 
+	const method = context.method;
+	//debug.log('method = ', method);
+
 	//debug.log('content =', content);
 
 	//debug.log('_getContent(', content, ', ', parts, ')');
 
 	if (parts.length === 0) {
 		//debug.log('content =', content);
-		return content;
+
+		const upperMethod = _.toUpper(method);
+		const methodSymbol = _.has(symbols.method, upperMethod) ? symbols.method[upperMethod] : undefined;
+
+		if (methodSymbol && content[methodSymbol] !== undefined) {
+			const value = content[methodSymbol];
+			if (_.isFunction(value)) {
+				return value(context);
+			} else {
+				return value;
+			}
+		}
+
+		switch (method) {
+
+		case 'get':
+		case 'options':
+		case 'head':
+			return content;
+
+		default:
+			throw new HTTPError(405);
+		}
 	}
 
 	const part = parts.shift();
@@ -105,28 +131,26 @@ function _getContent (context, content, parts) {
 	//debug.log('content['+part+'] =', content[part]);
 
 	if (_.isFunction(content[part])) {
-		const method = context.method;
-		//debug.log('method = ', method);
+		switch (method) {
 
-		if (method === 'post') {
+		case 'post':
 			//debug.log('Calling ', part);
 			return context.$getBody().then(body => _getContentFunctionCall(context, content, part, parts, body) );
-		}
 
-		if (method === 'get') {
+		case 'get':
 			return _getContent(context, content[part], parts);
-		}
 
-		if (method === 'options') {
+		case 'options':
 			return _getContent(context, content[part], parts);
+
+		default:
+			throw new HTTPError(405);
 		}
 
-		throw new HTTPError(405);
-
-	} else {
-		//debug.log('content['+part+'] not function');
-		return _getContent(context, content[part], parts);
 	}
+
+	//debug.log('content['+part+'] not function');
+	return _getContent(context, content[part], parts);
 }
 
 /**

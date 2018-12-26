@@ -99,6 +99,7 @@ class RequestService {
 	 * execution will be stopped at that point.
 	 * @param req {Object} The Node.js HTTP Request object
 	 * @param res {Object} The Node.js HTTP Resource object
+	 * @param next {function|undefined}
 	 * @returns {Promise} A promise of
 	 * @private
 	 */
