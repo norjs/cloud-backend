@@ -83,8 +83,11 @@ class MainService {
 	 * @private
 	 */
 	_errorLog (...args) {
-		const f = this._log && this._log.error ? this._log.error : debug.error;
-		f(...args);
+		if (this._log && this._log.error) {
+			this._log.error(...args);
+		} else {
+			debug.error(...args);
+		}
 		return this;
 	}
 
@@ -95,8 +98,11 @@ class MainService {
 	 * @private
 	 */
 	_infoLog (...args) {
-		const f = this._log && this._log.info ? this._log.info : debug.info;
-		f(...args);
+		if (this._log && this._log.info) {
+			this._log.info(...args);
+		} else {
+			debug.info(...args);
+		}
 		return this;
 	}
 
@@ -107,8 +113,11 @@ class MainService {
 	 * @private
 	 */
 	_debugLog (...args) {
-		const f = this._log && this._log.debug ? this._log.debug : debug.log;
-		f(...args);
+		if (this._log && this._log.debug) {
+			this._log.debug(...args);
+		} else {
+			debug.log(...args);
+		}
 		return this;
 	}
 
