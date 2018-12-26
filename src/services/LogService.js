@@ -89,8 +89,7 @@ function handleErrors (f) {
 class LogService {
 
 	constructor () {
-		this[PRIVATE.level] = LEVEL.DEBUG;
-		this[PRIVATE.context] = undefined;
+		this[PRIVATE.level] = LEVEL.INFO;
 		this[PRIVATE.name] = undefined;
 		this[PRIVATE.fullName] = undefined;
 		this[PRIVATE.parent] = undefined;
