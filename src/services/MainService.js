@@ -83,7 +83,7 @@ class MainService {
 	 * @private
 	 */
 	_errorLog (...args) {
-		const f = this._log && _.isFunction(this._log.error) ? this._log.error : debug.error;
+		const f = this._log && this._log.error ? this._log.error : debug.error;
 		f(...args);
 		return this;
 	}
@@ -95,7 +95,19 @@ class MainService {
 	 * @private
 	 */
 	_infoLog (...args) {
-		const f = this._log && _.isFunction(this._log.error) ? this._log.info : debug.info;
+		const f = this._log && this._log.info ? this._log.info : debug.info;
+		f(...args);
+		return this;
+	}
+
+	/** Write to debug log
+	 *
+	 * @param args
+	 * @returns {MainService}
+	 * @private
+	 */
+	_debugLog (...args) {
+		const f = this._log && this._log.debug ? this._log.debug : debug.log;
 		f(...args);
 		return this;
 	}
@@ -139,7 +151,7 @@ class MainService {
 					this._serviceCache.get('LogService').then(logService => this._log = logService)
 					//this._serviceCache.get('RequestService').then(requestService => this._request = requestService)
 				])
-			).then(() => this._infoLog('[main] All services created.'))
+			).then(() => this._debugLog('[main] All services created.'))
 
 		}).catch(
 			err => this._errorLog('Failed to create some services: ' + ((err && err.message) || ''+err) )
@@ -151,7 +163,7 @@ class MainService {
 	 */
 	configServices (config) {
 		return this._serviceCache.configAll(config).then(
-			() => this._infoLog('[main] All services configured.')
+			() => this._debugLog('[main] All services configured.')
 		).catch(err => {
 			this._errorLog('Failed to configure some services: ' + ((err && err.message) || ''+err));
 			return Async.reject(err);
@@ -161,7 +173,7 @@ class MainService {
 	/** Initialize services and call .$onInit() on each service. */
 	initServices () {
 		return this._serviceCache.initAll().then(
-			() => this._infoLog('[main] All services initialized.')
+			() => this._debugLog('[main] All services initialized.')
 		).catch(err => {
 			this._errorLog('Failed to initialize some services: ' + ((err && err.message) || ''+err));
 			return Async.reject(err);
