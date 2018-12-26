@@ -2,14 +2,15 @@
  * @module @norjs/cloud-backend
  */
 
-import _ from 'lodash';
-import debug from 'nor-debug';
 import ref from 'nor-ref';
 import { HTTPError } from 'nor-errors';
 import { createBodyIDs } from '@norjs/cloud-common';
 import parseRequestData from './parseRequestData.js';
 
 import {
+	_,
+	debug,
+	symbols,
 	getAllKeys,
 	notPrivate,
 	getConstructors,
@@ -89,8 +90,13 @@ function prepareObjectPrototypeResponse (context, content, parent) {
 	return body;
 }
 
-/** */
-function prepareObjectResponse (context, content) {
+/**
+ * @param context {Context}
+ * @param content
+ * @param ref
+ * @return {{$ref: *, $hash: null, $id: null, $type: Array}}
+ */
+function prepareObjectResponse (context, content, ref = context.$ref()) {
 
 	//debug.log('content [before] = ', content);
 
@@ -110,7 +116,7 @@ function prepareObjectResponse (context, content) {
 	let body = {
 		$id: null,
 		$hash: null,
-		$ref: context.$ref(),
+		$ref: ref,
 		$type: getConstructors(content)
 	};
 
@@ -144,25 +150,48 @@ function prepareObjectResponse (context, content) {
 
 	//debug.log('content [after#5] = ', content);
 
+	let bodyMethods = {};
+	_.each(_.keys(symbols.method), symbolKey => {
+		const symbol = symbols.method[symbolKey];
+		if (content[symbol]) {
+			const value = content[symbol];
+			bodyMethods[symbolKey] = prepareScalarResponse(context, value, context.$ref(), _.toLower(symbolKey));
+		}
+	});
+
+	if (_.keys(bodyMethods).length) {
+		body.$methods = bodyMethods;
+	}
 
 	return body;
 }
 
+/**
+ *
+ * @param key
+ * @returns {boolean}
+ */
 function notArgumentsOrCaller (key) {
 	if (key === 'arguments') return false;
 	if (key === 'caller') return false;
 	return true;
 }
 
-/** */
-function prepareFunctionResponse (context, f, ref) {
+/**
+ * @param context {Context}
+ * @param f {function}
+ * @param ref
+ * @param method
+ * @return {{$method: string, $args: Array, $ref: *, $type: string}}
+ */
+function prepareFunctionResponse (context, f, ref = context.$ref(), method = 'post') {
 	debug.assert(context).is('object');
 	debug.assert(f).is('function');
 
 	let body = {
-		$ref: ref || context.$ref(),
+		$ref: ref,
 		$type: 'Function',
-		$method: 'post',
+		$method: method,
 		$args: parseFunctionArgumentNames(f)
 	};
 
@@ -173,17 +202,23 @@ function prepareFunctionResponse (context, f, ref) {
 	return body;
 }
 
-/** */
-function prepareScalarResponse (context, content) {
+/**
+ * @param context {Context}
+ * @param content
+ * @param ref
+ * @param method
+ * @return {*}
+ */
+function prepareScalarResponse (context, content, ref = context.$ref(), method = 'post') {
 
 	if (_.isFunction(content)) {
-		return prepareFunctionResponse(context, content);
+		return prepareFunctionResponse(context, content, ref, method);
 	}
 
 	// FIXME: Implement better way to transfer undefined!
 	if (content === 'undefined') {
 		return {
-			$ref: context.$ref(),
+			$ref: ref,
 			$path: 'payload',
 			$type: 'undefined',
 			payload: undefined
@@ -191,27 +226,39 @@ function prepareScalarResponse (context, content) {
 	}
 
 	return {
-		$ref: context.$ref(),
+		$ref: ref,
 		$path: 'payload',
 		$type: getConstructors(content),
 		payload: content
 	};
 }
 
-/** */
-function prepareResponse (context, content) {
+/**
+ * @param context {Context}
+ * @param content
+ * @param ref
+ * @return {*}
+ */
+function prepareResponse (context, content, ref) {
 	if (content && (content instanceof Date)) {
-		return prepareScalarResponse(context, content);
+		return prepareScalarResponse(context, content, ref);
 	}
 	if (_.isArray(content)) {
-		return prepareScalarResponse(context, content);
+		return prepareScalarResponse(context, content, ref);
 	}
 	if (_.isObject(content)) {
-		return prepareObjectResponse(context, content);
+		return prepareObjectResponse(context, content, ref);
 	}
-	return prepareScalarResponse(context, content);
+	return prepareScalarResponse(context, content, ref);
 }
 
+/**
+ *
+ * @param key {string}
+ * @param value
+ * @returns {*}
+ * @private
+ */
 function _parseExceptionProperty (key, value) {
 	if (key === 'stack') {
 		return _.split(value, "\n");
@@ -219,7 +266,13 @@ function _parseExceptionProperty (key, value) {
 	return _.cloneDeep(value);
 }
 
-/** */
+/**
+ * @param context {Context}
+ * @param code {number}
+ * @param message {string}
+ * @param exception
+ * @return {{code: *, $statusCode: *, message: *, $ref: *, $type: string}}
+ */
 function prepareErrorResponse (context, code, message, exception) {
 
 	const $type = 'error';
@@ -271,6 +324,13 @@ function prepareErrorResponse (context, code, message, exception) {
 	return body;
 }
 
+/**
+ *
+ * @param req {object}
+ * @param commonName
+ * @returns {string}
+ * @private
+ */
 function _getIdentity (req, commonName) {
 	const unverifiedUser_ = req.unverifiedUser ? '~' + req.unverifiedUser : '';
 	////debug.log('unverifiedUser_ = ', unverifiedUser_);
@@ -279,6 +339,14 @@ function _getIdentity (req, commonName) {
 	return (commonName ? '+' + commonName : user_);
 }
 
+/**
+ *
+ * @param basePath
+ * @param req
+ * @param url
+ * @returns {*}
+ * @private
+ */
 function _ref (basePath, req, url) {
 	if (basePath) {
 		return ref(req, url, basePath);
@@ -286,6 +354,10 @@ function _ref (basePath, req, url) {
 	return ref(req, url);
 }
 
+/**
+ *
+ * @type {number}
+ */
 const NS_PER_SEC = 1e9;
 
 /**
@@ -293,6 +365,10 @@ const NS_PER_SEC = 1e9;
  */
 class Context {
 
+	/**
+	 *
+	 * @param req
+	 */
 	constructor (req) {
 		this.req = req;
 		this.remoteAddress = _.get(req, 'connection.remoteAddress');
@@ -318,8 +394,17 @@ class Context {
 
 	$getBody () { return parseRequestData(this.req); }
 
+	/**
+	 *
+	 * @param basePath
+	 * @returns {*|*}
+	 */
 	$ref (basePath) { return _ref(basePath, this.req, this.url); }
 
+	/**
+	 *
+	 * @param time
+	 */
 	$setTime (time) {
 		this.time = time;
 	}
@@ -339,7 +424,10 @@ class Context {
 
 }
 
-/** */
+/**
+ * @param req {object}
+ * @return {Context}
+ */
 function createContext (req) {
 	debug.assert(req).is('object');
 	if (req.$context) return req.$context;

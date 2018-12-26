@@ -75,13 +75,23 @@ function _getContentFunctionCall (context, content, part, parts, body) {
 
 /** Recursively get content
  *
- * @param context
- * @param content
- * @param parts
+ * @param context {object}
+ * @param content {*}
+ * @param parts {array}
  * @returns {*}
  * @private
  */
 function _getContent (context, content, parts) {
+
+	if (!content) {
+		throw new HTTPError(404);
+	}
+
+	debug.assert(context).is('object');
+	debug.assert(context.method).is('string');
+
+	debug.assert(content).is('object');
+
 	debug.assert(parts).is('array');
 
 	const method = context.method;
@@ -93,11 +103,6 @@ function _getContent (context, content, parts) {
 
 	if (parts.length === 0) {
 		//debug.log('content =', content);
-
-		if (!content) {
-			throw new HTTPError(404);
-		}
-		debug.assert(content).is('object');
 
 		const upperMethod = _.toUpper(method);
 		const methodSymbol = upperMethod && (_.has(symbols.method, upperMethod) ? symbols.method[upperMethod] : undefined);
@@ -131,7 +136,6 @@ function _getContent (context, content, parts) {
 		return;
 	}
 
-	debug.assert(content).is('object');
 	//debug.log('content = ', content);
 	//debug.log('content['+part+'] =', content[part]);
 
