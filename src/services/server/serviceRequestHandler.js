@@ -94,8 +94,13 @@ function _getContent (context, content, parts) {
 	if (parts.length === 0) {
 		//debug.log('content =', content);
 
+		if (!content) {
+			throw new HTTPError(404);
+		}
+		debug.assert(content).is('object');
+
 		const upperMethod = _.toUpper(method);
-		const methodSymbol = _.has(symbols.method, upperMethod) ? symbols.method[upperMethod] : undefined;
+		const methodSymbol = upperMethod && (_.has(symbols.method, upperMethod) ? symbols.method[upperMethod] : undefined);
 
 		if (methodSymbol && content[methodSymbol] !== undefined) {
 			const value = content[methodSymbol];
