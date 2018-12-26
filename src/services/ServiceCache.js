@@ -22,6 +22,55 @@ function __matchName (serviceName, s) {
 	return s.name === serviceName;
 }
 
+const PRIVATE = {
+	log: Symbol('_log')
+	, services: Symbol('_services')
+};
+
+class PlaceholderConsoleLogService {
+
+	/**
+	 *
+	 * @param args
+	 */
+	debug (...args) {
+		//debug.log(moment().format(), ...args);
+	}
+
+	/**
+	 *
+	 * @param args
+	 */
+	log (...args) {
+		//console.log(moment().format() + ' ' + _.join(args, ' '))
+	}
+
+	/**
+	 *
+	 * @param args
+	 */
+	info (...args) {
+		console.log(moment().format() + ' ' + _.join(args, ' '))
+	}
+
+	/**
+	 *
+	 * @param args
+	 */
+	warn (...args) {
+		debug.warn(moment().format(), ...args);
+	}
+
+	/**
+	 *
+	 * @param args
+	 */
+	error (...args) {
+		debug.error(moment().format(), ...args);
+	}
+
+}
+
 /**
  * @typedef InternalCacheObject
  * @type {object}
@@ -61,7 +110,47 @@ class ServiceCache extends EventEmitter {
 		super();
 
 		/** @member {Object.<String,InternalCacheObject>} */
-		this._services = {};
+		this[PRIVATE.services] = {};
+
+		/**
+		 *
+		 * @type {undefined|PlaceholderConsoleLogService|LogService}
+		 * @private
+		 */
+		this[PRIVATE.log] = undefined;
+	}
+
+	/**
+	 * Just in time selects a LoggingService, or creates a placeholder LogService, if one has not been registered yet.
+	 *
+	 * @returns {*}
+	 */
+	get log () {
+
+		if (!this[PRIVATE.log] || (this[PRIVATE.log] instanceof PlaceholderConsoleLogService)) {
+			// FIXME: If it's placeholder, this could be done using _.debounce() so it doesn't need to be done every call
+			const logServices = this._getInstances('LogService');
+			if (logServices && logServices.length) {
+				this[PRIVATE.log] = _.first(logServices);
+
+				if (logServices.length >= 2) {
+					// FIXME: Implement a proxy log service which sends log to all of these
+
+					this[PRIVATE.log].warn('Warning! More log services detected, but only using this service.');
+
+					_.forEach(logServices, log => {
+						if (log === this[PRIVATE.log]) return;
+						this[PRIVATE.log].debug('Note! ServiceCache will not log to this log service.');
+					});
+				}
+			}
+		}
+
+		if (!this[PRIVATE.log]) {
+			this[PRIVATE.log] = new PlaceholderConsoleLogService();
+		}
+
+		return this[PRIVATE.log];
 	}
 
 	/** Returns true if a function (with the same name) exists in the cache.
@@ -81,8 +170,8 @@ class ServiceCache extends EventEmitter {
 	 */
 	_existsName (service_) {
 		debug.assert(service_).is('string');
-		const keys = Object.keys(this._services);
-		return _.some(keys, id => __matchName(service_, this._services[id]) );
+		const keys = Object.keys(this[PRIVATE.services]);
+		return _.some(keys, id => __matchName(service_, this[PRIVATE.services][id]) );
 	}
 
 	/** Returns true if a service with this UUID exists in the cache.
@@ -92,7 +181,7 @@ class ServiceCache extends EventEmitter {
 	 */
 	_existsUUID (service_) {
 		debug.assert(service_).is('uuid');
-		return _.has(this._services, service_);
+		return _.has(this[PRIVATE.services], service_);
 	}
 
 	/** Returns true if this service exists in the cache.
@@ -113,7 +202,7 @@ class ServiceCache extends EventEmitter {
 	 */
 	_getNameById (serviceId) {
 		debug.assert(serviceId).is('uuid');
-		return _.get(this._services, serviceId + '.name');
+		return _.get(this[PRIVATE.services], serviceId + '.name');
 	}
 
 	/** Returns the name of the service
@@ -150,7 +239,7 @@ class ServiceCache extends EventEmitter {
 
 		if (_.isString(service)) {
 			if (isUUID(service)) return [service];
-			return _.map(_.filter(this._services, s => s.name === service), s => s.id);
+			return _.map(_.filter(this[PRIVATE.services], s => s.name === service), s => s.id);
 		}
 
 		return [];
@@ -208,9 +297,9 @@ class ServiceCache extends EventEmitter {
 					const missingServices = _.filter(args, name => !this._existsName(name));
 
 					if (missingServices.length === 1) {
-						console.log(moment().format() + ' [ServiceCache] No service ' + missingServices.join(', ') + ' for '+name+'. Waiting '+(waitTime/1000)+' s.');
+						this.log.debug('[ServiceCache] No service ' + missingServices.join(', ') + ' for '+name+'. Waiting '+(waitTime/1000)+' s.');
 					} else {
-						console.log(moment().format() + ' [ServiceCache] Some services missing (' + missingServices.join(', ') + ') for '+name+'. Waiting '+(waitTime/1000)+' s.');
+						this.log.debug('[ServiceCache] Some services missing (' + missingServices.join(', ') + ') for '+name+'. Waiting '+(waitTime/1000)+' s.');
 					}
 
 					loops += 1;
@@ -254,7 +343,7 @@ class ServiceCache extends EventEmitter {
 
 		//debug.log('instance = ', instance);
 
-		this._services[uuid] = {
+		this[PRIVATE.services][uuid] = {
 			id: uuid,
 			name: serviceName,
 			instance,
@@ -262,7 +351,7 @@ class ServiceCache extends EventEmitter {
 			isInit: false,
 			isRun: false
 		};
-		console.log(moment().format() + ' [ServiceCache] Registered ' + serviceName + ' with UUID ' + uuid);
+		this.log.debug('[ServiceCache] Registered ' + serviceName + ' with UUID ' + uuid);
 		this._emitRegister(uuid);
 		return uuid;
 	}
@@ -283,7 +372,7 @@ class ServiceCache extends EventEmitter {
 		const serviceName = _.get(service, 'constructor.name');
 		const uuid = uuidv4();
 
-		this._services[uuid] = {
+		this[PRIVATE.services][uuid] = {
 			id: uuid,
 			name: serviceName,
 			instance: service,
@@ -292,7 +381,7 @@ class ServiceCache extends EventEmitter {
 			isRun: false
 		};
 
-		console.log(moment().format() + ' [ServiceCache] Registered ' + serviceName + ' with UUID ' + uuid);
+		this.log.debug('[ServiceCache] Registered ' + serviceName + ' with UUID ' + uuid);
 		this._emitRegister(uuid);
 		return uuid;
 	}
@@ -305,8 +394,8 @@ class ServiceCache extends EventEmitter {
 	_getInstances (service) {
 		const uuids = this._getUUIDsForService(service);
 		//debug.log('uuids = ', uuids);
-		return _.map(_.filter(uuids, uuid => _.has(this._services, uuid) && this._services[uuid].instance),
-			uuid => this._services[uuid].instance
+		return _.map(_.filter(uuids, uuid => _.has(this[PRIVATE.services], uuid) && this[PRIVATE.services][uuid].instance),
+			uuid => this[PRIVATE.services][uuid].instance
 		);
 	}
 
@@ -315,7 +404,7 @@ class ServiceCache extends EventEmitter {
 	 * @private
 	 */
 	_getNames () {
-		return _.uniq(_.map(this._services, service => service.name));
+		return _.uniq(_.map(this[PRIVATE.services], service => service.name));
 	}
 
 	/** Returns service instances by UUID, name or Function
@@ -345,7 +434,7 @@ class ServiceCache extends EventEmitter {
 
 		if (l === 1) return _.first(services);
 
-		const name = this._getName(service)
+		const name = this._getName(service);
 		if (l === 0) throw new TypeError("Service not found: " + name);
 		throw new Error("Multiple services found for " + name);
 	}
@@ -357,7 +446,7 @@ class ServiceCache extends EventEmitter {
 	 * @private
 	 */
 	_emitRegister (uuid) {
-		this.emit('register', this._services[uuid], uuid);
+		this.emit('register', this[PRIVATE.services][uuid], uuid);
 	}
 
 	/** Fires an event for unregistration
@@ -367,7 +456,7 @@ class ServiceCache extends EventEmitter {
 	 * @private
 	 */
 	_emitUnregister (uuid) {
-		this.emit('unregister', this._services[uuid], uuid);
+		this.emit('unregister', this[PRIVATE.services][uuid], uuid);
 	}
 
 	/** Unregister services by UUID, name or function
@@ -380,8 +469,8 @@ class ServiceCache extends EventEmitter {
 		const uuids = this._getUUIDsForService(service);
 		_.forEach(uuids, uuid => {
 			if (this._exists(uuid)) {
-				this._emitUnregister(this._services[uuid], uuid);
-				delete this._services[uuid];
+				this._emitUnregister(this[PRIVATE.services][uuid], uuid);
+				delete this[PRIVATE.services][uuid];
 			}
 		});
 		return this;
@@ -467,7 +556,7 @@ class ServiceCache extends EventEmitter {
 	 * @private
 	 */
 	_getUUIDs () {
-		return Object.keys(this._services);
+		return Object.keys(this[PRIVATE.services]);
 	}
 
 	/** Returns a list of registered service UUIDs
@@ -498,13 +587,13 @@ class ServiceCache extends EventEmitter {
 				() => {
 					serviceObj.isConfig = true;
 					serviceObj.isConfiguring = undefined;
-					console.log(moment().format() + ' [ServiceCache] Configured ' + serviceObj.name + ' with UUID ' + serviceObj.id);
+					this.log.debug('[ServiceCache] Configured ' + serviceObj.name + ' with UUID ' + serviceObj.id);
 				}
 			);
 		}
 
 		serviceObj.isConfig = true;
-		console.log(moment().format() + ' [ServiceCache] Configured ' + serviceObj.name + ' with UUID ' + serviceObj.id);
+		this.log.debug('[ServiceCache] Configured ' + serviceObj.name + ' with UUID ' + serviceObj.id);
 
 		return Async.resolve();
 	}
@@ -519,7 +608,7 @@ class ServiceCache extends EventEmitter {
 			debug.assert(config).is('object');
 			const uuids = this._getUUIDsForService(service);
 			return Async.all(_.map(uuids, uuid => Async.fcall( () => {
-				const serviceObj = this._services[uuid];
+				const serviceObj = this[PRIVATE.services][uuid];
 				return this._config(serviceObj, config);
 			})));
 		} ).then( () => {} );
@@ -538,8 +627,8 @@ class ServiceCache extends EventEmitter {
 				_.map(
 					_.filter(
 						_.map(
-							_.keys(this._services),
-							uuid => this._services[uuid]
+							_.keys(this[PRIVATE.services]),
+							uuid => this[PRIVATE.services][uuid]
 						),
 						serviceObj => serviceObj.isConfig ? false : !(serviceObj.isConfiguring)
 					),
@@ -552,8 +641,8 @@ class ServiceCache extends EventEmitter {
 			// Check if some services are still unconfigured (probably created by other config functions)
 			const unconfigured = _.filter(
 				_.map(
-					_.keys(this._services),
-					uuid => this._services[uuid]
+					_.keys(this[PRIVATE.services]),
+					uuid => this[PRIVATE.services][uuid]
 				),
 				serviceObj => serviceObj.isConfig ? false : !(serviceObj.isConfiguring)
 			);
@@ -574,7 +663,7 @@ class ServiceCache extends EventEmitter {
 			const uuids = this._getUUIDsForService(service);
 			return Async.all(_.map(uuids, uuid => Async.fcall( () => {
 
-				const serviceObj = this._services[uuid];
+				const serviceObj = this[PRIVATE.services][uuid];
 
 				if (!serviceObj.isConfig) {
 					throw new Error("Service has not been configured: " + serviceObj.name + " ["+uuid+"]");
@@ -589,13 +678,13 @@ class ServiceCache extends EventEmitter {
 					return Async.resolve(instance.$onInit()).then(
 						() => {
 							serviceObj.isInit = true;
-							console.log(moment().format() + ' [ServiceCache] Inititialized ' + serviceObj.name + ' with UUID ' + serviceObj.id);
+							this.log.debug('[ServiceCache] Inititialized ' + serviceObj.name + ' with UUID ' + serviceObj.id);
 						}
 					);
 				}
 
 				serviceObj.isInit = true;
-				console.log(moment().format() + ' [ServiceCache] Inititialized ' + serviceObj.name + ' with UUID ' + serviceObj.id);
+				this.log.debug('[ServiceCache] Inititialized ' + serviceObj.name + ' with UUID ' + serviceObj.id);
 
 			})));
 		} ).then( () => {} );
@@ -620,7 +709,7 @@ class ServiceCache extends EventEmitter {
 			const uuids = this._getUUIDsForService(service);
 			return Async.all(_.map(uuids, uuid => Async.fcall( () => {
 
-				const serviceObj = this._services[uuid];
+				const serviceObj = this[PRIVATE.services][uuid];
 
 				const instance = serviceObj.instance;
 
@@ -633,13 +722,13 @@ class ServiceCache extends EventEmitter {
 					return Async.resolve(instance.$onRun()).then(
 						() => {
 							serviceObj.isRun = true;
-							console.log(moment().format() + ' [ServiceCache] Service ' + serviceObj.name + ' running with UUID ' + serviceObj.id);
+							this.log.debug('[ServiceCache] Service ' + serviceObj.name + ' running with UUID ' + serviceObj.id);
 						}
 					);
 				}
 
 				serviceObj.isRun = true;
-				console.log(moment().format() + ' [ServiceCache] Service ' + serviceObj.name + ' running with UUID ' + serviceObj.id);
+				this.log.debug('[ServiceCache] Service ' + serviceObj.name + ' running with UUID ' + serviceObj.id);
 
 			})));
 		} ).then( () => {} );
