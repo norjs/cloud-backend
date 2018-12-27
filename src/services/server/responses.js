@@ -150,17 +150,21 @@ function prepareObjectResponse (context, content, ref = context.$ref()) {
 
 	//debug.log('content [after#5] = ', content);
 
-	let bodyMethods = {};
+	let bodyMethods = [];
 	_.each(_.keys(symbols.method), symbolKey => {
 		const symbol = symbols.method[symbolKey];
 		if (content[symbol]) {
 			const value = content[symbol];
-			bodyMethods[symbolKey] = prepareScalarResponse(context, value, context.$ref(), _.toLower(symbolKey));
+			if (_.isFunction(value)) {
+				bodyMethods.push( prepareCustomHttpMethodResponse(context, value, context.$ref(), _.toLower(symbolKey)) );
+			} else {
+				bodyMethods.push( prepareScalarResponse(context, value, context.$ref(), _.toLower(symbolKey)) );
+			}
 		}
 	});
 
-	if (_.keys(bodyMethods).length) {
-		body.$methods = bodyMethods;
+	if (bodyMethods.length) {
+		body.$alternatives = bodyMethods;
 	}
 
 	return body;
@@ -198,6 +202,26 @@ function prepareFunctionResponse (context, f, ref = context.$ref(), method = 'po
 	getAllKeys(f).filter(notPrivate).filter(notArgumentsOrCaller).filter(key => notFunction(f[key])).forEach( key => {
 		body[key] = f[key];
 	} );
+
+	return body;
+}
+
+/**
+ * @param context {Context}
+ * @param f {function}
+ * @param ref
+ * @param method
+ * @return {{$method: string, $args: Array, $ref: *, $type: string}}
+ */
+function prepareCustomHttpMethodResponse (context, f, ref = context.$ref(), method = 'post') {
+	debug.assert(context).is('object');
+	debug.assert(f).is('function');
+
+	let body = {
+		$ref: ref,
+		$type: 'Request',
+		$method: method
+	};
 
 	return body;
 }
@@ -392,7 +416,16 @@ class Context {
 
 	$getIdentity () { return _getIdentity(this.req, this.commonName); }
 
-	$getBody () { return parseRequestData(this.req); }
+	/**
+	 * Parses request data.
+	 *
+	 * @param type {string} Either `"string"` or `"binary"`.
+	 * @param limit {number} Maximum size limit
+	 * @returns {Promise.<string|Buffer>} Depending on the type, either a promise of `string` or a `Buffer` is returned.
+	 */
+	$getBody (type = 'string', {limit = 1e6} = {}) {
+		return parseRequestData(this.req, {type, limit});
+	}
 
 	/**
 	 *
