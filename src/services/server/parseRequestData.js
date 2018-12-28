@@ -123,12 +123,6 @@ function _parseStringRequestData (req, resolve, reject, {limit = 1e6} = {}) {
 function _parseBinaryRequestData (req, resolve, reject, {limit = 1e6} = {}) {
 	handleErrors( () => {
 
-		// FIXME: Simulate `socket.setEncoding(null)`: (See https://github.com/nodejs/node/issues/6038)
-		if (req._readableState) {
-			delete req._readableState.decoder;
-			delete req._readableState.encoding;
-		}
-
 		let length = 0;
 		let body = [];
 
