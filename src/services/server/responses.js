@@ -414,7 +414,9 @@ class Context {
 		return this.req;
 	}
 
-	$getIdentity () { return _getIdentity(this.req, this.commonName); }
+	$getIdentity () {
+		return _getIdentity(this.req, this.commonName);
+	}
 
 	/**
 	 * Parses request data.
@@ -432,7 +434,9 @@ class Context {
 	 * @param basePath
 	 * @returns {*|*}
 	 */
-	$ref (basePath) { return _ref(basePath, this.req, this.url); }
+	$ref (basePath) {
+		return _ref(basePath, this.req, this.url);
+	}
 
 	/**
 	 *

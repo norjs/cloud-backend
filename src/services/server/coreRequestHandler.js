@@ -201,8 +201,8 @@ function _standardErrorHandler (err, context, res) {
 }
 
 /** Build a HTTP(s) request handler. This handler handles the core functionality; exception handling, etc.
- * @param req {Object} Node.js request object
- * @param res {Object} Node.js response object
+ * @param req {IncomingMessage} Node.js request object
+ * @param res {ServerResponse} Node.js response object
  * @param next {Function} A callback to tell if we should move to next middleware
  * @returns {Promise}
  */
