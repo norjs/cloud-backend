@@ -3,7 +3,7 @@
  */
 
 import _ from 'lodash';
-import debug from 'nor-debug';
+import debug from '@norjs/debug';
 import apacheMd5 from "apache-md5";
 import { HTTPError } from "nor-errors";
 

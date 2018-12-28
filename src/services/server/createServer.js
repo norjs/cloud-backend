@@ -5,7 +5,7 @@
 import Async from '../../Async.js';
 import https from 'https';
 import http from 'http';
-import debug from 'nor-debug';
+import debug from '@norjs/debug';
 
 const createServerByProtocol = {
 

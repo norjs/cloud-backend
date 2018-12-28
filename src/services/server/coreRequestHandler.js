@@ -4,7 +4,7 @@
 
 import _ from 'lodash';
 import Async from '../../Async.js';
-import debug from 'nor-debug';
+import debug from '@norjs/debug';
 //import ref from 'nor-ref';
 import { HTTPError } from 'nor-errors';
 import { createBodyIDs } from '@norjs/cloud-common';
