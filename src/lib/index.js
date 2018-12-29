@@ -8,7 +8,7 @@ import symbols from './symbols.js';
 import _ from 'lodash';
 import debug from '@norjs/debug';
 import moment from 'moment';
-import fs from 'nor-fs';
+import FS from 'fs';
 import events from 'events';
 import PATH from 'path';
 
@@ -40,7 +40,7 @@ export {
 	, _
 	, debug
 	, moment
-	, fs
+	, FS
 	, PATH
 	, EventEmitter
 	, isPrivate

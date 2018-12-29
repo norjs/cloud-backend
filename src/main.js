@@ -8,7 +8,7 @@ import {
 	, Async
 	, debug
 	, moment
-	, fs
+	, FS
 	, PATH
 	, getServiceByName
 } from './lib/index.js';
@@ -89,7 +89,7 @@ function usage (argv) {
  * @returns {string}
  */
 function readFile (name) {
-	return fs.sync.readFile(name, {encoding:'utf8'});
+	return FS.readFileSync(name, {encoding:'utf8'});
 }
 
 /**
