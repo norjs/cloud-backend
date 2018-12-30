@@ -2,7 +2,7 @@
  * @module @sendanor/cloud-backend
  */
 
-import { HTTPError } from 'nor-errors';
+import { HTTPError } from '@norjs/errors';
 
 import {
 	Async,

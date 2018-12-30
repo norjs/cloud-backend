@@ -2,8 +2,8 @@
  * @module @norjs/cloud-backend
  */
 
-import ref from 'nor-ref';
-import { HTTPError } from 'nor-errors';
+import ref from '@norjs/ref';
+import { HTTPError } from '@norjs/errors';
 import { createBodyIDs } from '@norjs/cloud-common';
 import parseRequestData from './parseRequestData.js';
 

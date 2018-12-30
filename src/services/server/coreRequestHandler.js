@@ -5,8 +5,7 @@
 import _ from 'lodash';
 import Async from '../../Async.js';
 import debug from '@norjs/debug';
-//import ref from 'nor-ref';
-import { HTTPError } from 'nor-errors';
+import { HTTPError } from '@norjs/errors';
 import { createBodyIDs } from '@norjs/cloud-common';
 import moment from 'moment';
 import querystring from 'querystring';
