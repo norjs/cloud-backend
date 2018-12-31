@@ -2,11 +2,12 @@
  * @module @sendanor/cloud-backend
  */
 
-import { HTTPError } from 'nor-errors';
+import { HTTPError } from '@norjs/errors';
 
 import {
 	Async,
 	_,
+	symbols,
 	debug,
 	isPrivate
 } from '../../lib/index.js';
@@ -72,16 +73,59 @@ function _getContentFunctionCall (context, content, part, parts, body) {
 	});
 }
 
+/**
+ * Get the symbol for custom implementation of a HTTP method
+ *
+ * @param method {string} The HTTP method as a string
+ * @returns {symbol} The Symbol key for custom HTTP method implementation, otherwise `undefined`
+ * @private
+ */
+function _getMethodSymbol (method) {
+	const upperMethod = _.toUpper(method);
+	return upperMethod && _.has(symbols.method, upperMethod) ? symbols.method[upperMethod] : undefined;
+}
+
+/**
+ * Execute custom implementation for a method from a `content` object.
+ *
+ * @param context {object}
+ * @param content {*}
+ * @param methodSymbol {symbol}
+ * @returns {*} The result from the function. Probably a promise.
+ * @private
+ */
+function _callCustomMethod (context, content, methodSymbol) {
+	const value = content[methodSymbol];
+	if (_.isFunction(value)) {
+		return content[methodSymbol](context);
+	} else {
+		return value;
+	}
+}
+
 /** Recursively get content
  *
- * @param context
- * @param content
- * @param parts
+ * @param context {object}
+ * @param content {*}
+ * @param parts {array}
  * @returns {*}
  * @private
  */
 function _getContent (context, content, parts) {
+
+	if (!content) {
+		throw new HTTPError(404);
+	}
+
+	debug.assert(context).is('object');
+	debug.assert(context.method).is('string');
+
+	debug.assert(content).is('object');
+
 	debug.assert(parts).is('array');
+
+	const method = context.method;
+	//debug.log('method = ', method);
 
 	//debug.log('content =', content);
 
@@ -89,7 +133,21 @@ function _getContent (context, content, parts) {
 
 	if (parts.length === 0) {
 		//debug.log('content =', content);
-		return content;
+		const methodSymbol = _getMethodSymbol(method);
+		if (methodSymbol && content[methodSymbol] !== undefined) {
+			return _callCustomMethod(context, content, methodSymbol);
+		}
+
+		switch (method) {
+
+		case 'get':
+		case 'options':
+		case 'head':
+			return content;
+
+		default:
+			throw new HTTPError(405);
+		}
 	}
 
 	const part = parts.shift();
@@ -100,33 +158,39 @@ function _getContent (context, content, parts) {
 		return;
 	}
 
-	debug.assert(content).is('object');
 	//debug.log('content = ', content);
 	//debug.log('content['+part+'] =', content[part]);
 
-	if (_.isFunction(content[part])) {
-		const method = context.method;
-		//debug.log('method = ', method);
+	const contentPart = content[part];
 
-		if (method === 'post') {
+	if (contentPart) {
+		const methodSymbol = _getMethodSymbol(method);
+		if (methodSymbol && contentPart[methodSymbol] !== undefined) {
+			return _callCustomMethod(context, contentPart, methodSymbol);
+		}
+	}
+
+	if (_.isFunction(contentPart)) {
+		switch (method) {
+
+		case 'post':
 			//debug.log('Calling ', part);
 			return context.$getBody().then(body => _getContentFunctionCall(context, content, part, parts, body) );
+
+		case 'get':
+			return _getContent(context, contentPart, parts);
+
+		case 'options':
+			return _getContent(context, contentPart, parts);
+
+		default:
+			throw new HTTPError(405);
 		}
 
-		if (method === 'get') {
-			return _getContent(context, content[part], parts);
-		}
-
-		if (method === 'options') {
-			return _getContent(context, content[part], parts);
-		}
-
-		throw new HTTPError(405);
-
-	} else {
-		//debug.log('content['+part+'] not function');
-		return _getContent(context, content[part], parts);
 	}
+
+	//debug.log('content['+part+'] not function');
+	return _getContent(context, contentPart, parts);
 }
 
 /**

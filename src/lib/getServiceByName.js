@@ -5,7 +5,7 @@
 import _ from 'lodash';
 import Async from '../Async.js';
 import resolve from 'resolve';
-import debug from 'nor-debug';
+import debug from '@norjs/debug';
 import cloudClient from '@norjs/cloud-client';
 
 /** Returns true if value is a string and looks like a URL (ftp://, http://

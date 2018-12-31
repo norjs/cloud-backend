@@ -3,7 +3,7 @@
  */
 
 import _ from 'lodash';
-import debug from 'nor-debug';
+import debug from '@norjs/debug';
 
 const reservedPropertyNames = [
 	'constructor',

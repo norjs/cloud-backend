@@ -174,7 +174,6 @@ class ServerService {
 
 			return _.reduce(handlers, (a, b) => a.then(b), Async.resolve());
 		});
-
 	}
 
 	/**
@@ -192,6 +191,7 @@ class ServerService {
 				Async.resolve(isUUID(name) ? this._serviceCache.getNameById(name) : name),
 				this._serviceCache.get(name)
 			]).then( ([name, instance]) => {
+
 				this._log.info('[ServerService] Service ' + name + ' started at port ' + (config.port || 3000
 				) + ' as ' + (config.protocol || 'https'
 				));
@@ -250,6 +250,8 @@ class ServerService {
 			);
 
 		});
+
+		this._log.log('SocketIO enabled.');
 	}
 
 	/**

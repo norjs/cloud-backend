@@ -8,7 +8,7 @@ import {
 	, Async
 	, debug
 	, moment
-	, fs
+	, FS
 	, PATH
 	, getServiceByName
 } from './lib/index.js';
@@ -89,7 +89,7 @@ function usage (argv) {
  * @returns {string}
  */
 function readFile (name) {
-	return fs.sync.readFile(name, {encoding:'utf8'});
+	return FS.readFileSync(name, {encoding:'utf8'});
 }
 
 /**
@@ -194,7 +194,11 @@ function getConfig (argv_) {
 		config.listen = '';
 	}
 
-	config.servicePaths = argv._;
+	if (_.isArray(config.servicePaths)) {
+		config.servicePaths = _.concat([], config.servicePaths, argv._);
+	} else {
+		config.servicePaths = argv._;
+	}
 
 	config.userServices = _.map(config.servicePaths, servicePath => {
 		debug.assert(servicePath).is('string');

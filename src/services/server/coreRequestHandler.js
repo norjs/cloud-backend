@@ -4,9 +4,8 @@
 
 import _ from 'lodash';
 import Async from '../../Async.js';
-import debug from 'nor-debug';
-//import ref from 'nor-ref';
-import { HTTPError } from 'nor-errors';
+import debug from '@norjs/debug';
+import { HTTPError } from '@norjs/errors';
 import { createBodyIDs } from '@norjs/cloud-common';
 import moment from 'moment';
 import querystring from 'querystring';
@@ -201,8 +200,8 @@ function _standardErrorHandler (err, context, res) {
 }
 
 /** Build a HTTP(s) request handler. This handler handles the core functionality; exception handling, etc.
- * @param req {Object} Node.js request object
- * @param res {Object} Node.js response object
+ * @param req {IncomingMessage} Node.js request object
+ * @param res {ServerResponse} Node.js response object
  * @param next {Function} A callback to tell if we should move to next middleware
  * @returns {Promise}
  */
@@ -227,7 +226,7 @@ function coreRequestHandler (req, res, next) {
 	return Async.fcall(
 		() => _coreRequestHandlerWithoutErrorHandling(req, res, next)
 	).catch(err => {
-		console.log('err =', JSON.stringify(err));
+		//console.log('err =', JSON.stringify(err));
 		return _standardErrorHandler(err, context, res);
 	}).catch(unexpectedErrorHandler);
 }

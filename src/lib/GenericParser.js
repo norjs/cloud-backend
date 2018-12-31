@@ -3,7 +3,7 @@
  */
 
 import _ from 'lodash';
-import debug from 'nor-debug';
+import debug from '@norjs/debug';
 import ParseError from './ParseError.js';
 
 /** Generic parser implementation
