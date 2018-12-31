@@ -68,6 +68,8 @@ const LEVEL = {
 
 };
 
+const DEFAULT_LEVEL = LEVEL.DEBUG;
+
 const PRIVATE = {
 	level: Symbol('level')
 	, context: Symbol('context')
@@ -89,7 +91,7 @@ function handleErrors (f) {
 class LogService {
 
 	constructor () {
-		this[PRIVATE.level] = LEVEL.INFO;
+		this[PRIVATE.level] = DEFAULT_LEVEL;
 		this[PRIVATE.name] = undefined;
 		this[PRIVATE.fullName] = undefined;
 		this[PRIVATE.parent] = undefined;
