@@ -1,7 +1,7 @@
-import 'babel-polyfill';
+import '@babel/polyfill';
 import assert from 'assert';
 import debug from '@norjs/debug';
-import PromptParser from '../src/lib/PromptParser.js';
+import PromptParser from '../../dist/lib/PromptParser.js';
 
 describe('PromptParser', () => {
 

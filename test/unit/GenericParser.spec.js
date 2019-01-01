@@ -1,8 +1,8 @@
-import 'babel-polyfill';
+import '@babel/polyfill';
 import assert from 'assert';
 import debug from '@norjs/debug';
-import ParseError from '../src/lib/ParseError.js';
-import GenericParser from '../src/lib/GenericParser.js';
+import ParseError from '../../dist/lib/ParseError.js';
+import GenericParser from '../../dist/lib/GenericParser.js';
 
 describe('GenericParser', () => {
 
