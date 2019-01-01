@@ -3,6 +3,8 @@
  * @module @norjs/cloud-backend
  */
 
+import '@babel/polyfill';
+
 import {
 	_
 	, Async
