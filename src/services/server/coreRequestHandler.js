@@ -225,10 +225,9 @@ function coreRequestHandler (req, res, next) {
 
 	return Async.fcall(
 		() => _coreRequestHandlerWithoutErrorHandling(req, res, next)
-	).catch(err => {
-		//console.log('err =', JSON.stringify(err));
-		return _standardErrorHandler(err, context, res);
-	}).catch(unexpectedErrorHandler);
+	).catch(
+		err => _standardErrorHandler(err, context, res)
+	).catch(unexpectedErrorHandler);
 }
 
 export default coreRequestHandler;
