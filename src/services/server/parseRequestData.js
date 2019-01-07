@@ -5,7 +5,23 @@
 import {
 	_
 	, Async
+	, debug
 } from '../../lib/index.js';
+
+/**
+ * Exception safe new Promise( (resolve, reject) => f(resolve, reject));
+ * @param f {function}
+ * @returns {Promise}
+ */
+function safeCreatePromise (f) {
+	return Async.Promise((resolve, reject) => {
+		try {
+			f(resolve, reject);
+		} catch (err) {
+			reject(err);
+		}
+	});
+}
 
 const ERRORS = {
 	MAX_LIMIT: "Too much POST data detected. Connection closed.",
@@ -22,7 +38,15 @@ function handleErrors (f, reject) {
 	try {
 		return f();
 	} catch (err) {
-		reject(err);
+		try {
+			reject(err);
+		} catch (err2) {
+			debug.error(`Unespected error "${err2}" happened when trying to reject with error "${err}".`);
+			debug.log(
+				'1st error: ', err, '\n',
+				'2nd error: ', err2
+			);
+		}
 	}
 }
 
@@ -101,7 +125,13 @@ function _parseStringRequestData (req, resolve, reject, {limit = 1e6} = {}) {
 					_closeRequest(req, listeners, reject, err);
 				});
 			},
-			error: err => _errorListener (err, req, listeners, reject)
+			error: err => {
+				handleErrors(()=> {
+					_errorListener (err, req, listeners, reject)
+				}, (err) => {
+					_closeRequest(req, listeners, reject, err);
+				});
+			}
 		};
 
 		req.on('data', listeners.data);
@@ -143,7 +173,13 @@ function _parseBinaryRequestData (req, resolve, reject, {limit = 1e6} = {}) {
 					_closeRequest(req, listeners, reject, err);
 				});
 			},
-			error: err => _errorListener (err, req, listeners, reject)
+			error: err => {
+				handleErrors(()=> {
+					_errorListener (err, req, listeners, reject)
+				}, (err) => {
+					_closeRequest(req, listeners, reject, err);
+				});
+			}
 		};
 
 		req.on('data', listeners.data);
@@ -162,8 +198,8 @@ function _parseBinaryRequestData (req, resolve, reject, {limit = 1e6} = {}) {
  */
 function parseRequestData (req, {type = 'string', limit = 1e6}) {
 	switch(type) {
-	case 'string': return Async.Promise((resolve, reject) => _parseStringRequestData(req, resolve, reject, {limit}));
-	case 'binary': return Async.Promise((resolve, reject) => _parseBinaryRequestData(req, resolve, reject, {limit}));
+	case 'string': return safeCreatePromise((resolve, reject) => _parseStringRequestData(req, resolve, reject, {limit}));
+	case 'binary': return safeCreatePromise((resolve, reject) => _parseBinaryRequestData(req, resolve, reject, {limit}));
 	default: throw new TypeError("Unknown type: " + type);
 	}
 }

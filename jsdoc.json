@@ -15,7 +15,7 @@
   "templates": {
     "cleverLinks": false,
     "monospaceLinks": true,
-    "systemName": "cloud-backend",
+    "systemName": "@norjs/backend",
     "footer": "Created by Sendanor",
     "copyright": "2017",
     "navType": "vertical",

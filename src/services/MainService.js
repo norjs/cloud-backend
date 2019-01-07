@@ -82,7 +82,8 @@ class MainService {
 	 * @returns {MainService}
 	 * @private
 	 */
-	_errorLog (...args) {
+	_errorLog (err, ...args) {
+		debug.log('Exception detected: ', err);
 		if (this._log && this._log.error) {
 			this._log.error(...args);
 		} else {
@@ -163,7 +164,7 @@ class MainService {
 			).then(() => this._debugLog('[main] All services created.'))
 
 		}).catch(
-			err => this._errorLog('Failed to create some services: ' + ((err && err.message) || ''+err) )
+			err => this._errorLog(err, 'Failed to create some services: ' + ((err && err.message) || ''+err) )
 		);
 	}
 
@@ -174,7 +175,7 @@ class MainService {
 		return this._serviceCache.configAll(config).then(
 			() => this._debugLog('[main] All services configured.')
 		).catch(err => {
-			this._errorLog('Failed to configure some services: ' + ((err && err.message) || ''+err));
+			this._errorLog(err, 'Failed to configure some services: ' + ((err && err.message) || ''+err));
 			return Async.reject(err);
 		});
 	}
@@ -184,7 +185,7 @@ class MainService {
 		return this._serviceCache.initAll().then(
 			() => this._debugLog('[main] All services initialized.')
 		).catch(err => {
-			this._errorLog('Failed to initialize some services: ' + ((err && err.message) || ''+err));
+			this._errorLog(err, 'Failed to initialize some services: ' + ((err && err.message) || ''+err));
 			return Async.reject(err);
 		});
 	}
@@ -196,7 +197,7 @@ class MainService {
 		return this._serviceCache.runAll().then(
 			() => this._infoLog('[main] All services running.')
 		).catch(err => {
-			this._errorLog('Failed to call run on some services: ' + ((err && err.message) || ''+err));
+			this._errorLog(err,'Failed to call run on some services: ' + ((err && err.message) || ''+err));
 			return Async.reject(err);
 		});
 	}
