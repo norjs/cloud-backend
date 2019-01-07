@@ -1,6 +1,6 @@
 
 /** NorJS Cloud Micro service backend runner
- * @module @norjs/cloud-backend
+ * @module @norjs/backend
  */
 
 import '@babel/polyfill';
@@ -53,7 +53,7 @@ function usage (argv) {
 	console.log([
 		'USAGE: ' + getCommandName(argv) + ' [OPT(s)] [Service [...Service_N]]',
 		'',
-		'Service is a path to a JavaScript class file or a URL to connect to a remote cloud-backend.',
+		'Service is a path to a JavaScript class file or a URL to connect to a remote norjs-backend.',
 		'',
 		'Options for PromptService:',
 		'',
@@ -224,7 +224,7 @@ function getConfig (argv_) {
 	return config;
 }
 
-/** The main function for cloud-backend command
+/** The main function for norjs-backend command
  * @param argv {Array.<String>} Array of command line arguments.
  */
 function main (argv) {

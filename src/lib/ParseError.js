@@ -1,5 +1,5 @@
 /**
- * @module @norjs/cloud-backend
+ * @module @norjs/backend
  */
 
 /**
@@ -7,7 +7,7 @@
  *
  * @example
  *
- * import ParseError from '@norjs/cloud-backend';
+ * import ParseError from '@norjs/backend';
  * throw new ParseError("At line 123");
  *
  * @extends Error

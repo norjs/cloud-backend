@@ -1,16 +1,13 @@
-NorJS Cloud Backend
--------------------
+NorJS Backend Server
+--------------------
 
-This is a CLI application to run NorJS's Cloud Service Framework.
+This is an application which runs micro services for NorJS framework.
 
-This application is still in active development and probably has few bugs in it. 
-
-Please submit [issues](https://github.com/norjs/cloud-backend/issues) and we'll 
-look at it.
+This application is still in active development and may have few bugs in it. Please submit [issues](https://github.com/norjs/backend/issues) and we'll look into it.
 
 ### Install
 
-`npm install -g cloud-backend`
+`npm install -g @norjs/backend`
 
 ### Tutorial
 
@@ -71,7 +68,7 @@ Our `TestDateService` can set a time, but cannot see it.
 Next we'll start our first daemon:
 
 ```
-$ cloud-backend ./dist/examples/DateService.js --protocol=http --auth=basic:demo:'$apr1$N8FG9xe6$KRqwt39aE3UX4szXSeeZD0'
+$ norjs-backend ./dist/examples/DateService.js --protocol=http --auth=basic:demo:'$apr1$N8FG9xe6$KRqwt39aE3UX4szXSeeZD0'
 2017-07-10T09:22:14+03:00 [main] Added credentials for auth basic for user demo
 2017-07-10T09:22:14+03:00 [ServiceCache] Registered ServiceCache with UUID 0c49ef8e-d22d-4fcb-b662-57722ccbd64b
 2017-07-10T09:22:14+03:00 [ServiceCache] Registered DateService with UUID 85ade1e9-0c42-45b6-85c5-51586cde7093
@@ -86,7 +83,7 @@ $ cloud-backend ./dist/examples/DateService.js --protocol=http --auth=basic:demo
 Then we'll start our other service and connect to remote `DateService`:
 
 ```
-$ cloud-backend http://demo:test@localhost:3000 ./dist/examples/TestDateService.js --port=3001 --protocol=http --listen=TestDateService
+$ norjs-backend http://demo:test@localhost:3000 ./dist/examples/TestDateService.js --port=3001 --protocol=http --listen=TestDateService
 2017-07-10T09:27:16+03:00 [ServiceCache] Registered ServiceCache with UUID 5aa563b0-584c-4338-9cb1-caae6efb081f
 2017-07-10T09:27:16+03:00 [ServiceCache] No service DateService for TestDateService. Waiting 1 s.
 2017-07-10T09:27:16+03:00 [ServiceCache] Registered DateService with UUID 2922feaa-0430-42bd-a11a-9d951931d068
@@ -181,8 +178,8 @@ $ curl -H "Content-Type: application/json" --data '{"$args":[1539446645624]}' -X
 
 ### Different ways of running
 
-Use as a client-verified protected HTTPS server: `cloud-backend ./TestService.js --ca-file=./ca-crt.pem --key-file=./localhost-key.pem --cert-file=./localhost-crt.pem --protocol=https`
+Use as a client-verified protected HTTPS server: `norjs-backend ./TestService.js --ca-file=./ca-crt.pem --key-file=./localhost-key.pem --cert-file=./localhost-crt.pem --protocol=https`
 
-Use as an unprotected HTTP server: `cloud-backend ./TestService.js --protocol=http`
+Use as an unprotected HTTP server: `norjs-backend ./TestService.js --protocol=http`
 
-Use without a server: `cloud-backend ./TestService.js`
+Use without a server: `norjs-backend ./TestService.js`
